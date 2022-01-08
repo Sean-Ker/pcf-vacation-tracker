@@ -4,3 +4,4 @@ flask-restx==0.5.1
 Flask-Cors
 pymongo==4.0.1
 Werkzeug
+uwsgi
