@@ -7,3 +7,4 @@ Werkzeug
 uwsgi
 dnspython
 gunicorn
+flask_cors

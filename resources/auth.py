@@ -19,7 +19,7 @@ from werkzeug.security import safe_str_cmp
 
 from db import db
 
-api = Namespace("auth", description="Cats related operations")
+api = Namespace("auth", description="Authentication Ednpoints")
 
 
 @api.route("/login")
@@ -33,7 +33,7 @@ class Login(Resource):
             if is_pass_correct:
                 # print(user)
                 id = user["_id"]
-                pprint(id)
+                # pprint(id)
                 refresh = create_refresh_token(identity=json_util.dumps(id))
                 access = create_access_token(identity=json_util.dumps(id))
 
@@ -48,16 +48,18 @@ class Login(Resource):
         return Response(json_util.dumps({"error": "Wrong credentials"}), 401)
 
 
+from utils import get_user_by_id
+
+
 @api.route("/me")
 class Me(Resource):
     @jwt_required()
     def get(self):
         user_id = json.loads(get_jwt_identity())
-        pprint(user_id)
-        user = db.user.find_one({"_id": user_id}, {"pwd": 0})
+        # user = db.user.find_one({"_id": user_id}, {"pwd": 0})
+        user = get_user_by_id(user_id)
         if not user:
             return jsonify({"error": "Shouldn't happen. Please check"}), 400
-        print(user)
         return user, 200
 
 

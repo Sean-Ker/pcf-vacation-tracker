@@ -13,16 +13,21 @@ from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
 )
-from flask_restx import Api, Resource, Namespace
-
+from flask_restx import Api, Namespace, Resource
+from utils import get_user_by_id
 from db import db
 
-api = Namespace("users", description="Cats related operations")
+api = Namespace("users", description="Users Endpoints")
 
 
 @api.route("/")
 class Users(Resource):
     @jwt_required()
     def get(self):
-        data = list(db.user.find({}, {"pwd": 0}))
-        return Response(json_util.dumps(data), 200)
+        all_ids = list(db.user.find({"is_active": True}, {"_id": 1}))
+        all_users = []
+        for id_obj in all_ids:
+            id = id_obj["_id"]
+            user = get_user_by_id(id)
+            all_users.append(user)
+        return Response(json_util.dumps(all_users), 200)
