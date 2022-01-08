@@ -2,7 +2,6 @@ import json
 from datetime import datetime, timedelta, timezone
 from pprint import pprint
 
-import validators
 from bson import json_util
 from bson.objectid import ObjectId
 from flask import Blueprint, Flask, Response, jsonify, request
