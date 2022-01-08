@@ -5,3 +5,4 @@ Flask-Cors
 pymongo==4.0.1
 Werkzeug
 uwsgi
+dnspython
