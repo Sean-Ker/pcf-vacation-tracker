@@ -48,7 +48,7 @@ jwt = JWTManager(app)
 @jwt_required()
 @app.route("/test", methods=["GET"])
 def test():
-    data = list(db.user.find({"is_active": True}, {"pwd": 0}))
+    data = list(db.users.find({"is_active": True}, {"pwd": 0}))
     return Response(json_util.dumps(data), 200)
 
 

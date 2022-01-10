@@ -27,7 +27,7 @@ class Login(Resource):
     def post(self):
         email = request.json.get("email", "")
         password = request.json.get("password", "")
-        user = db.user.find_one({"email": email})
+        user = db.users.find_one({"email": email})
         if user:
             is_pass_correct = safe_str_cmp(user["pwd"], password)
             if is_pass_correct:
@@ -56,7 +56,7 @@ class Me(Resource):
     @jwt_required()
     def get(self):
         user_id = json.loads(get_jwt_identity())
-        # user = db.user.find_one({"_id": user_id}, {"pwd": 0})
+        # user = db.users.find_one({"_id": user_id}, {"pwd": 0})
         user = get_user_by_id(user_id)
         if not user:
             return jsonify({"error": "Shouldn't happen. Please check"}), 400

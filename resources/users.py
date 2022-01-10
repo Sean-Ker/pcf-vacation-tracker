@@ -24,7 +24,7 @@ api = Namespace("users", description="Users Endpoints")
 class Users(Resource):
     @jwt_required()
     def get(self):
-        all_ids = list(db.user.find({"is_active": True}, {"_id": 1}))
+        all_ids = list(db.users.find({"is_active": True}, {"_id": 1}))
         all_users = []
         for id_obj in all_ids:
             id = id_obj["_id"]
