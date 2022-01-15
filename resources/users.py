@@ -20,8 +20,16 @@ from db import db
 api = Namespace("users", description="Users Endpoints")
 
 
-@api.route("/")
+@api.route("")
 class Users(Resource):
+    @jwt_required()
+    def get(self):
+        all_users = db.users.find({"is_active": True}, {"pwd": 0})
+        return Response(json_util.dumps(all_users), 200)
+
+
+@api.route("/all")
+class AllUsers(Resource):
     @jwt_required()
     def get(self):
         all_ids = list(db.users.find({"is_active": True}, {"_id": 1}))
@@ -31,3 +39,15 @@ class Users(Resource):
             user = get_user_by_id(id)
             all_users.append(user)
         return Response(json_util.dumps(all_users), 200)
+
+
+@api.route("/<string:username>")
+class UserById(Resource):
+    @jwt_required()
+    def put(self, username):
+        id_obj = db.users.find_one({"username": username}, {"_id": 1})
+        if not id_obj:
+            return None
+        id = id_obj["_id"]
+        user = get_user_by_id(id)
+        return user

@@ -45,7 +45,7 @@ class Login(Resource):
                         }
                     )
                 )
-        return Response(json_util.dumps({"error": "Wrong credentials"}), 401)
+        return {"error": "Wrong Credentials"}, 401
 
 
 from utils import get_user_by_id

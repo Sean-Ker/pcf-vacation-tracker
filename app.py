@@ -5,7 +5,6 @@ from pprint import pprint
 from bson import json_util
 from bson.objectid import ObjectId
 from flask import Blueprint, Flask, Response, jsonify, request
-from flask_cors import CORS
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -19,13 +18,13 @@ from flask_restx import Api, Resource
 from resources.auth import api as auth_blueprint
 from resources.users import api as users_namespace
 from resources.departments import api as departments_namespace
+from resources.leave_types import api as leave_types_namespace
+from resources.locations import api as locations_namespace
 from db import db
 
 app = Flask(__name__)
-# CORS(app)
 app.config["PROPAGATE_EXCEPTIONS"] = True
 app.config["JWT_SECRET_KEY"] = "PMc0kiXe0PwWSTjcPtvWBwCnHxCkQTATKvDFwfJZ"
-# app.config["CORS_HEADERS"] = "Content-Type"
 
 authorizations = {
     "Bearer Auth": {"type": "apiKey", "in": "header", "name": "Authorization"},
@@ -40,6 +39,8 @@ api = Api(
 api.add_namespace(auth_blueprint)
 api.add_namespace(users_namespace)
 api.add_namespace(departments_namespace)
+api.add_namespace(leave_types_namespace)
+api.add_namespace(locations_namespace)
 api.init_app(app)
 
 jwt = JWTManager(app)
@@ -56,10 +57,10 @@ def test():
 def after_request(response):
     # print("After request is running!")
     response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Methods", "DELETE, POST, PUT, GET, OPTIONS")
+    response.headers.add("Access-Control-Allow-Methods", "DELETE, POST, PUT, GET, OPTIONS, PATCH")
     response.headers.add(
         "Access-Control-Allow-Headers",
-        "Access-Control-Allow-Origin, Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, append,delete,entries,foreach,get,has,keys,set,values,Authorization",
+        "Access-Control-Allow-Origin, Content-Type, Access-Control-Allow-Headers, Authorization, authorization, X-Requested-With, append,delete,entries,foreach,get,has,keys,set,values",
     )
     return response
 
