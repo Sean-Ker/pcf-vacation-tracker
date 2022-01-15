@@ -8,4 +8,5 @@ uwsgi
 dnspython
 gunicorn
 flask_cors
+dnspython
 
