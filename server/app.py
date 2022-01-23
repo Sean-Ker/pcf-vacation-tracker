@@ -50,11 +50,11 @@ api.init_app(app)
 jwt = JWTManager(app)
 
 
-@jwt_required()
-@app.route("/test", methods=["GET"])
-def test():
-    data = list(db.users.find({"is_active": True}, {"pwd": 0}))
-    return Response(json_util.dumps(data), 200)
+# @jwt_required()
+# @app.route("/test", methods=["GET"])
+# def test():
+#     data = list(db.users.find({"is_active": True}, {"pwd": 0}))
+#     return Response(json_util.dumps(data), 200)
 
 
 @app.after_request
@@ -71,7 +71,11 @@ def after_request(response):
 
 @app.route("/")
 def serve():
-    print(app.static_folder)
+    return app.send_static_file("index.html")
+
+
+@app.errorhandler(404)
+def not_found(e):
     return app.send_static_file("index.html")
 
 

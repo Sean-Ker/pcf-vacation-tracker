@@ -52,11 +52,12 @@ class Users(Resource):
             return Response("Email already exsits", 400)
 
         all_leaves = list(db.leave_types.find({}))
-        data["leaves"] = [
-            {f"leaves.{l._id}.days_this_year": l.default_value, f"leaves.{l._id}.days_per_year": l.default_value}
+
+        data["leaves"] = {
+            str(l["_id"]): {"days_this_year": l["default_value"], "days_per_year": l["default_value"]}
             for l in all_leaves
-        ]
-        print(all_leaves)
+        }
+        print(data["leaves"])
 
         if not users:
             max_id = 0
