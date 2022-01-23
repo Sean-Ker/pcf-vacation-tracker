@@ -9,4 +9,5 @@ dnspython
 gunicorn
 flask_cors
 dnspython
-
+uuid
+beautifulsoup4

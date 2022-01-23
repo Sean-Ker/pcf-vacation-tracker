@@ -38,7 +38,7 @@ class Departments(Resource):
         else:
             max_id = max(departments, key=lambda d1: int(d1["_id"]))["_id"]
         new_id = str(int(max_id) + 1)
-        print(new_id)
+        # print(new_id)
         db.departments.insert_one({"_id": str(new_id), "name": department_name})
         return Response(f"Created {department_name}", 201)
 

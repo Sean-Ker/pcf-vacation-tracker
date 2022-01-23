@@ -20,6 +20,7 @@ from resources.users import api as users_namespace
 from resources.departments import api as departments_namespace
 from resources.leave_types import api as leave_types_namespace
 from resources.locations import api as locations_namespace
+from resources.rule_groups import api as rule_groups_namespace
 from db import db
 
 app = Flask(__name__)
@@ -41,6 +42,7 @@ api.add_namespace(users_namespace)
 api.add_namespace(departments_namespace)
 api.add_namespace(leave_types_namespace)
 api.add_namespace(locations_namespace)
+api.add_namespace(rule_groups_namespace)
 api.init_app(app)
 
 jwt = JWTManager(app)

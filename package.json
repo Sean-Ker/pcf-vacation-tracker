@@ -1,0 +1,61 @@
+{
+    "name": "vacation_tracker_app",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "@testing-library/jest-dom": "^5.14.1",
+        "@testing-library/react": "^11.2.7",
+        "@testing-library/user-event": "^12.8.3",
+        "antd": "^4.18.3",
+        "antd-password-input-strength": "^1.1.1",
+        "axios": "^0.21.4",
+        "bootstrap": "^5.1.3",
+        "formik": "^2.2.9",
+        "history": "^5.0.1",
+        "interactjs": "^1.10.11",
+        "jwt-decode": "^3.1.2",
+        "moment": "^2.29.1",
+        "react": "^17.0.2",
+        "react-bootstrap": "^1.6.4",
+        "react-calendar-timeline": "^0.27.0",
+        "react-color": "^2.19.3",
+        "react-country-flag": "^3.0.2",
+        "react-dom": "^17.0.2",
+        "react-icons": "^4.2.0",
+        "react-router": "^6.0.0-beta.2",
+        "react-router-dom": "^6.0.0-beta.2",
+        "react-scripts": "^5.0.0",
+        "styled-components": "^5.3.1",
+        "sweetalert2": "^11.1.9",
+        "sweetalert2-react-content": "^4.1.1",
+        "web-vitals": "^1.1.2",
+        "yup": "^0.32.9"
+    },
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject"
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest"
+        ]
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "devDependencies": {
+        "@types/react": "^17.0.22"
+    }
+}

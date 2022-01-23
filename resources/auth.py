@@ -27,7 +27,8 @@ class Login(Resource):
     def post(self):
         email = request.json.get("email", "")
         password = request.json.get("password", "")
-        user = db.users.find_one({"email": email})
+        user = db.users.find_one({"email": email.lower()})
+        print(user)
         if user:
             is_pass_correct = safe_str_cmp(user["pwd"], password)
             if is_pass_correct:
@@ -37,6 +38,9 @@ class Login(Resource):
                 refresh = create_refresh_token(identity=json_util.dumps(id))
                 access = create_access_token(identity=json_util.dumps(id))
 
+                if not user["is_active"]:
+                    return {"error": "User is deactivated"}, 401
+
                 return Response(
                     json_util.dumps(
                         {
@@ -45,6 +49,8 @@ class Login(Resource):
                         }
                     )
                 )
+            else:
+                return {"error": "Wrong Credentials"}, 401
         return {"error": "Wrong Credentials"}, 401
 
 
