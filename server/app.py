@@ -23,7 +23,7 @@ from resources.locations import api as locations_namespace
 from resources.rule_groups import api as rule_groups_namespace
 from resources.users import api as users_namespace
 
-app = Flask(__name__, static_folder="../build", static_url_path="/")
+app = Flask(__name__, static_folder="..\\build", static_url_path="/")
 app.config["PROPAGATE_EXCEPTIONS"] = True
 app.config["JWT_SECRET_KEY"] = "PMc0kiXe0PwWSTjcPtvWBwCnHxCkQTATKvDFwfJZ"
 
@@ -37,7 +37,7 @@ api = Api(
     version="1.0",
     description="A REST API backend.",
     doc="/api/docs",
-    base_url="/api",
+    prefix="/api",
 )
 api.add_namespace(auth_blueprint)
 api.add_namespace(users_namespace)
@@ -70,9 +70,10 @@ def after_request(response):
 
 
 @app.route("/")
-def index():
+def serve():
+    print(app.static_folder)
     return app.send_static_file("index.html")
 
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(port=5000, debug=True, threaded=True)
