@@ -5,6 +5,7 @@ from pprint import pprint
 from bson import json_util
 from bson.objectid import ObjectId
 from flask import Blueprint, Flask, Response, jsonify, request
+from flask.helpers import send_from_directory
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -15,15 +16,15 @@ from flask_jwt_extended import (
 )
 from flask_restx import Api, Resource
 
+from db import db
 from resources.auth import api as auth_blueprint
-from resources.users import api as users_namespace
 from resources.departments import api as departments_namespace
 from resources.leave_types import api as leave_types_namespace
 from resources.locations import api as locations_namespace
 from resources.rule_groups import api as rule_groups_namespace
-from db import db
+from resources.users import api as users_namespace
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="./build", static_url_path="")
 app.config["PROPAGATE_EXCEPTIONS"] = True
 app.config["JWT_SECRET_KEY"] = "PMc0kiXe0PwWSTjcPtvWBwCnHxCkQTATKvDFwfJZ"
 
@@ -65,6 +66,11 @@ def after_request(response):
         "Access-Control-Allow-Origin, Content-Type, Access-Control-Allow-Headers, Authorization, authorization, X-Requested-With, append,delete,entries,foreach,get,has,keys,set,values",
     )
     return response
+
+
+@app.route("/")
+def server():
+    return send_from_directory(app.static_folder, "index.html")
 
 
 if __name__ == "__main__":
