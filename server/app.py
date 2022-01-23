@@ -23,7 +23,7 @@ from resources.locations import api as locations_namespace
 from resources.rule_groups import api as rule_groups_namespace
 from resources.users import api as users_namespace
 
-app = Flask(__name__, static_folder="..\\build", static_url_path="/")
+app = Flask(__name__, static_folder="../build", static_url_path="/")
 app.config["PROPAGATE_EXCEPTIONS"] = True
 app.config["JWT_SECRET_KEY"] = "PMc0kiXe0PwWSTjcPtvWBwCnHxCkQTATKvDFwfJZ"
 
