@@ -71,7 +71,7 @@ class Users(Resource):
 
         db.users.insert_one(data)
 
-        url = f"http://192.168.1.224:5000/register/{uuid_url}"
+        url = f"https:pcfvt.herokuapp.com/register/{uuid_url}"
         create_account_email(data["email"], data["fname"], url)
 
         return Response(f'Successfully created an account for {data["fname"]} {data["lname"]}', 200)
@@ -81,10 +81,13 @@ class Users(Resource):
 class AllUsers(Resource):
     @jwt_required()
     def get(self):
-        all_employees = list(db.users.find({}, {"pwd": 0}))
+        company_id = get_jwt()["company_id"]
+        all_employees = list(db.users.find({"company_id": company_id}, {"pwd": 0}))
         for user in all_employees:
-            user["department"] = db.departments.find_one({"_id": user.get("department_id", None)})
-            user["manager"] = db.users.find_one({"_id": user.get("manager_id", None)})
+            user["department"] = db.departments.find_one(
+                {"_id": ObjectId(user["department_id"]), "company_id": company_id}
+            )
+            user["manager"] = db.users.find_one({"_id": user["manager_id"], "company_id": company_id})
             # user["employees"] = list(db.users.find({"manager_id": user.get("_id", None)}))
         return Response(json_util.dumps(all_employees), 200)
 

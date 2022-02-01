@@ -7,6 +7,7 @@ export const setJwt = (access_token, refresh_token) => {
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("refresh_token", refresh_token);
 };
+
 export const getAccessToken = () => localStorage.getItem("access_token");
 
 const getUserId = () => {

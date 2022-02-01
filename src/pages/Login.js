@@ -26,7 +26,7 @@ export default function Login({ logout }) {
             localStorage.removeItem("refresh_token");
             window.location.replace("/");
         }
-    });
+    }, [setUser, logout]);
 
     if (user !== null) {
         window.location.replace("/");
@@ -60,7 +60,7 @@ export default function Login({ logout }) {
                         })
                         .then(response => {
                             // success login
-                            // debugger;
+                            debugger;
                             setSubmitting(false);
                             response.data &&
                                 setJwt(
