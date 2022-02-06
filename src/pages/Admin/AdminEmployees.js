@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { getAllUsers } from "../../api/api";
-import { Table, Select, Typography, Button } from "antd";
+import { Table, Select, Typography, Button, Row, Col, Divider } from "antd";
 import { Container } from "react-bootstrap";
 import { Link as RouterLink } from "react-router-dom";
 import EmployeeName from "../../components/EmployeeName";
@@ -8,6 +8,8 @@ import axios from "../../api/axios";
 import { UserContext } from "../../Contexts";
 import CompanyHierarchy from "../../components/CompanyHierarchy";
 import CreateUserModal from "../../components/Modals/CreateUserModal";
+import CeoSelect from "../../components/CeoSelect";
+import EditUserModal from "../../components/Modals/EditUserModal";
 
 const { Option } = Select;
 const { Link } = Typography;
@@ -21,6 +23,7 @@ const AdminEmployees = () => {
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editEmployee, setEditEmployee] = useState(null);
     const [loading, setLoading] = useState(3);
+    const [ceoId, setCeoId] = useState(null);
 
     const { user } = useContext(UserContext);
 
@@ -44,16 +47,12 @@ const AdminEmployees = () => {
         fetchUsers();
     }, [createModalVisible, editModalVisible]);
 
-    const handleEditClick = employee => {
-        setEditModalVisible(true);
-        setEditEmployee(employee);
-    };
-
     const dataSource = users.map(user => ({
         ...user,
         key: user._id,
         name: user.fname + " " + user.lname,
         department: user.department.name,
+        manager: user.manager ? user.manager : "",
         status: user.is_active,
         role: user.is_admin ? "Admin" : user.employees.length === 0 ? "Employee" : "Manager",
         edit: "",
@@ -66,15 +65,22 @@ const AdminEmployees = () => {
             title: "Name",
             dataIndex: "name",
             key: "name",
-            render: (text, user) => (
-                <RouterLink to={`/user/${user.username}`} style={{ textDecoration: "none" }}>
+            render: (text, user) =>
+                user["username"] ? (
+                    <RouterLink to={`/user/${user.username}`} style={{ textDecoration: "none" }}>
+                        <EmployeeName
+                            fname={user.fname}
+                            lname={user.lname}
+                            country_code={user.country_id}
+                        />
+                    </RouterLink>
+                ) : (
                     <EmployeeName
                         fname={user.fname}
                         lname={user.lname}
                         country_code={user.country_id}
                     />
-                </RouterLink>
-            ),
+                ),
             filters: users.map(user => ({
                 text: user.fname + " " + user.lname,
                 value: user.fname + " " + user.lname,
@@ -150,16 +156,22 @@ const AdminEmployees = () => {
             title: "Action",
             dataIndex: "edit",
             key: "edit",
-            render: (text, user) => <Link onClick={e => handleEditClick(user)}>edit</Link>,
+            render: (text, user) => (
+                <Link
+                    onClick={e => {
+                        setEditModalVisible(true);
+                        setEditEmployee(user);
+                    }}>
+                    edit
+                </Link>
+            ),
         },
     ];
 
     if (loading > 0) {
         return (
             <Container>
-                <Typography.Title>Company Hierarchy</Typography.Title>
-                <Typography.Title>All Employees</Typography.Title>
-                <br />
+                <Typography.Title level={2}>All Employees</Typography.Title>
                 <Table loading={true} columns={columns} />
             </Container>
         );
@@ -173,16 +185,30 @@ const AdminEmployees = () => {
         );
     }
 
-    console.log(dataSource);
-    console.log(allLeaveTypes);
-    console.log(leaveType);
+    // console.log(dataSource);
+    // console.log(allLeaveTypes);
+    // console.log(leaveType);
 
     return (
         <Container>
-            <Typography.Title>Company Hierarchy</Typography.Title>
-            {user && users.length !== 0 && <CompanyHierarchy users={users} ceo_id="41" />}
-            <br />
-            <Typography.Title>All Employees</Typography.Title>
+            {users.length !== 0 && (
+                <Row>
+                    <Col span={12}>
+                        <Typography.Title level={2}>Company CEO</Typography.Title>
+                        <CeoSelect ceoId={ceoId} setCeoId={setCeoId} users={users} />
+                    </Col>
+                    <Col span={12}>
+                        {user && ceoId && (
+                            <>
+                                <Typography.Title level={2}>Company Hierarchy</Typography.Title>
+                                <CompanyHierarchy users={users} ceo_id={ceoId} />
+                            </>
+                        )}
+                    </Col>
+                </Row>
+            )}
+            <Divider />
+            <Typography.Title level={2}>All Employees</Typography.Title>
             <Button type="primary" size="large" onClick={() => setCreateModalVisible(true)}>
                 Create Employee
             </Button>
@@ -216,13 +242,27 @@ const AdminEmployees = () => {
                 }}
             />
             {loading <= 0 && (
-                <CreateUserModal
-                    modalVisible={createModalVisible}
-                    setModalVisible={setCreateModalVisible}
-                    users={users}
-                    leaveTypes={allLeaveTypes}
-                    departments={allDepartments}
-                />
+                <>
+                    {createModalVisible && (
+                        <CreateUserModal
+                            modalVisible={createModalVisible}
+                            setModalVisible={setCreateModalVisible}
+                            users={users}
+                            leaveTypes={allLeaveTypes}
+                            departments={allDepartments}
+                        />
+                    )}
+                    {editModalVisible && (
+                        <EditUserModal
+                            user={editEmployee}
+                            users={users}
+                            modalVisible={editModalVisible}
+                            setModalVisible={setEditModalVisible}
+                            leaveTypes={allLeaveTypes}
+                            departments={allDepartments}
+                        />
+                    )}
+                </>
             )}
         </Container>
     );

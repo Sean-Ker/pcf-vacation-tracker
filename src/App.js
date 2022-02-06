@@ -1,5 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo } from "react";
-import { Container, Spinner } from "react-bootstrap";
+import React, { useState, useEffect, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet, Link } from "react-router-dom";
 import Topbar from "./components/Topbar";
 import { UserContext, LoadingContext, CountriesContext } from "./Contexts";
@@ -22,12 +21,11 @@ import Register from "./pages/Register";
 
 export default function App() {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(0);
+    const [loading, setLoading] = useState(1);
     const [countries, setCountries] = useState([]);
 
     useEffect(() => {
         async function fetchUser() {
-            setLoading(prevLoading => (prevLoading += 1));
             const user = await getCurrentUser();
             setUser(user);
             const allCountries = await axios.get(`/locations`);

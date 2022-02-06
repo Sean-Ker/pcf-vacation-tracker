@@ -10,7 +10,7 @@ const Register = () => {
     const [user, setUser] = useState(null);
     const [allLocations, setAllLocations] = useState([]);
     const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(0);
+    const [loading, setLoading] = useState(3);
     const [formLoading, setFormLoading] = useState(false);
     const [registeredUser, setRegisteredUser] = useState(false);
 
@@ -21,38 +21,47 @@ const Register = () => {
     const uuid = url_array[url_array.length - 1];
 
     useEffect(() => {
-        setLoading(prevLoading => prevLoading + 1);
         axios
             .get("/locations")
             .then(res => {
                 setAllLocations(res["data"]);
-                setLoading(prevLoading => prevLoading - 1);
             })
             .catch(res => {
                 setError(res["response"]["data"]);
-                setLoading(prevLoading => prevLoading - 1);
-            });
-        axios
-            .get("/users/uuid/" + uuid)
-            .then(res => {
-                const userRes = res["data"];
-                setUser(userRes);
-                setLoading(prevLoading => prevLoading - 1);
-
-                form.setFieldsValue({
-                    name: userRes["fname"] + " " + userRes["lname"],
-                    email: userRes["email"],
-                    location: "",
+            })
+            .finally(() => setLoading(prevLoading => prevLoading - 1));
+        uuid &&
+            axios
+                .get("/users/uuid/" + uuid)
+                .then(res => {
+                    const userRes = res["data"];
+                    setUser(userRes);
+                    axios
+                        .get("/companies/" + userRes["company_id"])
+                        .then(res => {
+                            const companyName = res["data"]["name"];
+                            form.setFieldsValue({
+                                name: userRes["fname"] + " " + userRes["lname"],
+                                email: userRes["email"],
+                                company: companyName,
+                                location: "",
+                            });
+                        })
+                        .catch(res => setError(res["response"]["data"]))
+                        .finally(() => {
+                            setLoading(prevLoading => prevLoading - 1);
+                        });
+                })
+                .catch(res => {
+                    debugger;
+                    setError(res["response"]["data"]);
+                })
+                .finally(() => {
+                    setLoading(prevLoading => prevLoading - 1);
                 });
-            })
-            .catch(res => {
-                setError(res["response"]["data"]);
-                setLoading(prevLoading => prevLoading - 1);
-            });
-    }, []);
+    }, [form, uuid]);
 
     if (registeredUser) {
-        debugger;
         return (
             <Container>
                 <br />
@@ -79,39 +88,24 @@ const Register = () => {
         );
     }
 
-    if (loading >= 0)
+    if (loading > 0)
         return (
             <div style={{ textAlign: "center", padding: "130px 50px" }}>
                 <Spin size="large" />
             </div>
         );
 
-    const tailFormItemLayout = {
-        wrapperCol: {
-            xs: {
-                span: 24,
-                offset: 0,
-            },
-            sm: {
-                span: 16,
-                offset: 8,
-            },
-            md: {
-                span: 8,
-                offset: 1,
-            },
-        },
-    };
-
     return (
         <Container>
-            {JSON.stringify(user)}
             <Typography.Title>Finish Setting up Your Account</Typography.Title>
             <Form
                 form={form}
                 name="form"
                 autoComplete="false"
-                labelCol={{ span: 4 }}
+                labelCol={{ span: 6 }}
+                wrapperCol={{
+                    span: 6,
+                }}
                 onFinish={() =>
                     form.validateFields().then(values => {
                         console.log(values);
@@ -133,25 +127,26 @@ const Register = () => {
                             .finally(() => setFormLoading(false));
                     })
                 }>
-                <Form.Item name="name" label="Name:" {...tailFormItemLayout}>
-                    <Input disabled style={{ width: "300px" }} />
+                <Form.Item name="name" label="Name:">
+                    <Input disabled />
                 </Form.Item>
                 <Form.Item
                     name="email"
                     label="E-mail"
-                    {...tailFormItemLayout}
                     rules={[
                         {
                             type: "email",
                             message: "The input is not valid E-mail!",
                         },
                     ]}>
-                    <Input disabled style={{ width: "300px" }} />
+                    <Input disabled />
+                </Form.Item>
+                <Form.Item name="company" label="Company">
+                    <Input disabled />
                 </Form.Item>
                 <Form.Item
                     name="username"
                     label="Username"
-                    {...tailFormItemLayout}
                     rules={[
                         {
                             required: true,
@@ -163,12 +158,11 @@ const Register = () => {
                             message: "Username must only contain numbers and letters!",
                         },
                     ]}>
-                    <Input style={{ width: "300px" }} />
+                    <Input />
                 </Form.Item>
                 <Form.Item
-                    {...tailFormItemLayout}
                     name="location"
-                    label="Where are you located:"
+                    label="Your location:"
                     rules={[
                         {
                             required: true,
@@ -178,7 +172,6 @@ const Register = () => {
                     <Select
                         showSearch
                         allowClear
-                        style={{ width: "300px" }}
                         filterOption={(input, option) =>
                             option.name.toLowerCase().indexOf(input.toLowerCase()) > -1 ||
                             option.value.toLowerCase().indexOf(input.toLowerCase()) > -1
@@ -195,7 +188,6 @@ const Register = () => {
                 <Form.Item
                     name="password"
                     label="Password"
-                    {...tailFormItemLayout}
                     hasFeedback
                     rules={[
                         {
@@ -210,7 +202,7 @@ const Register = () => {
                                 "Password must contian at least 6 characters, a small letter, capital letter, digit and a special symbol!",
                         },
                     ]}>
-                    <PasswordInput style={{ width: "300px" }} />
+                    <PasswordInput />
                 </Form.Item>
 
                 <Form.Item
@@ -218,7 +210,6 @@ const Register = () => {
                     label="Confirm Password"
                     dependencies={["password"]}
                     hasFeedback
-                    {...tailFormItemLayout}
                     rules={[
                         {
                             required: true,
@@ -236,9 +227,9 @@ const Register = () => {
                             },
                         }),
                     ]}>
-                    <Input.Password style={{ width: "300px" }} />
+                    <Input.Password />
                 </Form.Item>
-                <Form.Item {...tailFormItemLayout}>
+                <Form.Item>
                     <Button
                         block
                         size="large"

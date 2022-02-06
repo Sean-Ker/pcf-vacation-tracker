@@ -19,6 +19,15 @@ const EmployeeName = ({ fname, lname, country_code, style = null }) => {
     // }, [countries, country_code]);
 
     const country = countries.filter(c => c["_id"] === country_code)[0];
+
+    if (!country) {
+        return (
+            <span style={style}>
+                {fname} {lname}
+            </span>
+        );
+    }
+
     return (
         <>
             <ReactCountryFlag

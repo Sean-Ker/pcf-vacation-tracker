@@ -22,6 +22,7 @@ from resources.leave_types import api as leave_types_namespace
 from resources.locations import api as locations_namespace
 from resources.rule_groups import api as rule_groups_namespace
 from resources.users import api as users_namespace
+from resources.companies import api as companies_namespace
 
 app = Flask(__name__, static_folder="../build", static_url_path="/")
 app.config["PROPAGATE_EXCEPTIONS"] = True
@@ -45,6 +46,7 @@ api.add_namespace(departments_namespace)
 api.add_namespace(leave_types_namespace)
 api.add_namespace(locations_namespace)
 api.add_namespace(rule_groups_namespace)
+api.add_namespace(companies_namespace)
 api.init_app(app)
 
 jwt = JWTManager(app)

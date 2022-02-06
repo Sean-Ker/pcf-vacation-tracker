@@ -41,23 +41,25 @@ class Users(Resource):
             "managed_employees_ids",
             "is_admin",
         }:
-            return Response("Invalid paramaters", 400)
+            return Response("Error: Invalid paramaters", 400)
 
         data["fname"] = data["fname"][:1].upper() + data["fname"][1:]
         data["lname"] = data["lname"][:1].upper() + data["lname"][1:]
         data["email"] = data["email"].lower()
+        data["employees"] = data["managed_employees_ids"]
+        del data["managed_employees_ids"]
 
-        users = list(db.users.find())
+        company_id = get_jwt()["company_id"]
+        users = list(db.users.find({"company_id": company_id}))
         if [user for user in users if user["email"] == data["email"]]:
-            return Response("Email already exsits", 400)
+            return Response("Error: Email already exsits", 400)
 
-        all_leaves = list(db.leave_types.find({}))
+        all_leaves = list(db.leave_types.find())
 
         data["leaves"] = {
             str(l["_id"]): {"days_this_year": l["default_value"], "days_per_year": l["default_value"]}
             for l in all_leaves
         }
-        print(data["leaves"])
 
         if not users:
             max_id = 0
@@ -68,10 +70,13 @@ class Users(Resource):
         uuid_url = uuid4()
         data["register_url"] = str(uuid_url)
         data["is_active"] = False
+        data["company_id"] = company_id
+        data["employees"] = []
+        data["username"] = None
 
         db.users.insert_one(data)
 
-        url = f"https:pcfvt.herokuapp.com/register/{uuid_url}"
+        url = f"https://pcfvt.herokuapp.com/register/{uuid_url}"
         create_account_email(data["email"], data["fname"], url)
 
         return Response(f'Successfully created an account for {data["fname"]} {data["lname"]}', 200)
@@ -99,6 +104,16 @@ class UserById(Resource):
         user = db.users.find_one({"_id": id}, {"pwd": 0})
         return user
 
+    @jwt_required()
+    def put(self, id):
+        data = request.json
+        if set(data.keys()) != {
+            "username",
+            "password",
+            "country_id",
+        }:
+            return Response("Error: Invalid paramaters", 400)
+
 
 @api.route("/username/<string:username>")
 class UserByUsername(Resource):
@@ -116,7 +131,7 @@ class UserByUUID(Resource):
             return Response("Error: Invalid URL, please check it.", 400)
         if user["is_active"]:
             return Response("Error: user is already registered.", 400)
-        return user
+        return Response(json_util.dumps(user), 200)
 
     @jwt_required()
     def put(self, id):
@@ -133,7 +148,12 @@ class UserByUUID(Resource):
             return Response("Invalid paramaters", 400)
 
         if user["is_active"]:
-            return Response("Error: User is already registered.", 400)
+            return Response("User is already registered.", 400)
+
+        company_id = user["company_id"]
+        users = list(db.users.find({"company_id": company_id}))
+        if [user for user in users if user["username"] == data["username"]]:
+            return Response("Username already exsits", 400)
 
         data["username"] = data["username"].lower()
 

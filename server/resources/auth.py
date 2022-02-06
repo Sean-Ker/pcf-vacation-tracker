@@ -61,7 +61,7 @@ class Me(Resource):
         user = get_user_by_id(user_id)
         if not user:
             return jsonify({"Error": "Shouldn't happen. Please report."}), 400
-        return user, 200
+        return Response(json_util.dumps(user), 200)
 
 
 # We are using the `refresh=True` options in jwt_required to only allow

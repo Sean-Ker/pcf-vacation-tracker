@@ -60,7 +60,7 @@ export default function Login({ logout }) {
                         })
                         .then(response => {
                             // success login
-                            debugger;
+                            // debugger;
                             setSubmitting(false);
                             response.data &&
                                 setJwt(

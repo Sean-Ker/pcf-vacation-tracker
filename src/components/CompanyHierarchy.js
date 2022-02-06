@@ -6,7 +6,6 @@ import { Link } from "react-router-dom";
 const { Search } = Input;
 
 function generateTreeData(users, root, searchValue) {
-    console.log(searchValue);
     let data = {
         title: (
             <Link to={`/user/${root["username"]}`} style={{ textDecoration: "none" }}>
@@ -107,7 +106,7 @@ const CompanyHierarchy = ({ users, ceo_id }) => {
     };
 
     return (
-        <>
+        <div style={{ width: 300 }}>
             {/* {JSON.stringify(treeData)} */}
             <Search
                 style={{ marginBottom: 8 }}
@@ -121,7 +120,7 @@ const CompanyHierarchy = ({ users, ceo_id }) => {
                 expandedKeys={expandedKeys}
                 autoExpandParent={autoExpandParent}
             />
-        </>
+        </div>
     );
 };
 
