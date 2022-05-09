@@ -66,43 +66,42 @@ const AdminRuleGroups = () => {
                 dataSource={ruleGroups}
                 loading={loading}
                 renderItem={item => (
-                    <Card
-                        style={{
-                            margin: "10px",
-                            borderRadius: "10px",
-                            overflow: "hidden",
-                            textAlign: "center",
-                            marginTop: 12,
-                            fontWeight: "bold",
-                        }}
-                        title={item.name}
-                        hoverable={true}
-                        actions={[
-                            <Button
-                                type="link"
-                                onClick={() => {
-                                    setRuleGroup(item);
-                                    setModalVisible(true);
-                                }}>
-                                edit
-                            </Button>,
-                        ]}>
-                        <List
-                            dataSource={users.filter(u => item["employee_ids"].includes(u["_id"]))}
-                            renderItem={employee => (
-                                <List.Item>
-                                    <Link
-                                        to={`/user/${employee.username}`}
-                                        style={{ textDecoration: "none" }}>
-                                        <EmployeeName
-                                            fname={employee["fname"]}
-                                            lname={employee["lname"]}
-                                            country_code={employee["country_id"]}
-                                        />
-                                    </Link>
-                                </List.Item>
-                            )}></List>
-                    </Card>
+                    <div
+                        onClick={() => {
+                            setRuleGroup(item);
+                            setModalVisible(true);
+                        }}>
+                        <Card
+                            style={{
+                                margin: "10px",
+                                borderRadius: "10px",
+                                overflow: "hidden",
+                                textAlign: "center",
+                                marginTop: 12,
+                                fontWeight: "bold",
+                            }}
+                            title={item.name}
+                            hoverable={true}
+                            actions={["edit"]}>
+                            <List
+                                dataSource={users.filter(u =>
+                                    item["employee_ids"].includes(u["_id"])
+                                )}
+                                renderItem={employee => (
+                                    <List.Item>
+                                        <Link
+                                            to={`/user/${employee.username}`}
+                                            style={{ textDecoration: "none" }}>
+                                            <EmployeeName
+                                                fname={employee["fname"]}
+                                                lname={employee["lname"]}
+                                                country_code={employee["country_id"]}
+                                            />
+                                        </Link>
+                                    </List.Item>
+                                )}></List>
+                        </Card>
+                    </div>
                 )}
             />
             {ruleGroup && (

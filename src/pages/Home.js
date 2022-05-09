@@ -1,110 +1,63 @@
-import React, { useContext, useEffect, useState } from "react";
-import { LoadingContext, UserContext } from "../Contexts";
-import Timeline, {
-    TimelineMarkers,
-    CustomMarker,
-    TodayMarker,
-    CursorMarker,
-} from "react-calendar-timeline";
+import React, { useEffect, useState, useContext } from "react";
+
 // make sure you include the timeline stylesheet or the timeline will not be styled
 import "react-calendar-timeline/lib/Timeline.css";
-import moment from "moment";
 import { getAllUsers } from "../api/api";
-import EmployeeName from "../components/EmployeeName";
-import { Button, Typography } from "antd";
+import { Button, Typography, message } from "antd";
 import { Container } from "react-bootstrap";
-import { Link } from "react-router-dom";
-import NewRequestModal from "../components/NewRequest";
-import CompanyHierarchy from "../components/CompanyHierarchy";
-
-const items = [
-    {
-        id: 1,
-        group: 1,
-        title: "item 1",
-        start_time: moment(),
-        end_time: moment().add(1, "day"),
-    },
-    {
-        id: 2,
-        group: 8,
-        title: "item 2",
-        start_time: moment().add(-0.5, "hour"),
-        end_time: moment().add(0.5, "hour"),
-    },
-    {
-        id: 3,
-        group: 10,
-        title: "item 3",
-        start_time: moment().add(2, "hour"),
-        end_time: moment().add(3, "hour"),
-    },
-];
+import NewRequestModal from "../components/Modals/NewRequestModal";
+import Calendar from "../components/Calendar";
+import axios from "../api/axios";
+import { UserContext } from "../Contexts";
 
 export default function Home() {
     const { user } = useContext(UserContext);
-    const { setLoading } = useContext(LoadingContext);
+    const [loading, setLoading] = useState(1);
     const [users, setUsers] = useState([]);
+    const [allLeaveTypes, setAllLeaveTypes] = useState([]);
+    const [allRuleGroups, setAllRuleGroups] = useState([]);
     const [newRequestVisible, setNewRequestVisible] = useState(false);
 
-    const { Text } = Typography;
-
-    const groups = users
-        .filter(u => u["is_active"])
-        .map(user => ({
-            id: user["_id"],
-            height: 40,
-            title: (
-                <Link to={`/user/${user.username}`} style={{ textDecoration: "none" }}>
-                    {/* {user.fname} {user.lname} */}
-                    <EmployeeName
-                        fname={user.fname}
-                        lname={user.lname}
-                        country_code={user.country_id}
-                    />
-                </Link>
-            ),
-        }));
-
     useEffect(() => {
-        async function fetchAllUsers() {
-            // setLoading(prevLoading => (prevLoading += 1));
+        async function fetchData() {
             const users = await getAllUsers();
+            const leaveTypes = await axios.get("/leave_types");
+            const ruleGroups = await axios.get("/rule_groups");
             setUsers(users);
-            // debugger;
-            // setLoading(prevLoading => (prevLoading -= 1));
+            setAllLeaveTypes(leaveTypes["data"]);
+            setAllRuleGroups(ruleGroups["data"]);
+            setLoading(prevLoading => prevLoading - 1);
         }
-        fetchAllUsers();
-        // setUser({ [e.target.name]: e.target.value });
-    }, []);
+        fetchData();
+    }, [newRequestVisible]);
+
+    const handleNewRequestClick = () => {
+        if (user.manager_id) {
+            setNewRequestVisible(true);
+        } else {
+            message.error("This is an error message");
+        }
+    };
+
+    if (loading > 0) {
+        return (
+            <Container>
+                <Typography.Title>Calendar</Typography.Title>
+            </Container>
+        );
+    }
 
     return (
         <Container>
             <br />
-
+            {/* {JSON.stringify(allRuleGroups)} */}
             <Typography.Title>Calendar</Typography.Title>
-            {/* {users.map((u) => (
-                <div key={u.id}>{u}</div>
-            ))} */}
-            {/* <div>{JSON.stringify(moment().format("YYYY-MM-DD"))}</div> */}
-            <Button type="primary" onClick={() => setNewRequestVisible(true)}>
+            <Button size="large" type="primary" onClick={handleNewRequestClick}>
                 New Leave Request
             </Button>
-            {users.length === 0 ? (
-                ""
-            ) : (
-                <Timeline
-                    groups={groups}
-                    items={items}
-                    sidebarWidth={200}
-                    canSelect={false}
-                    defaultTimeStart={moment()}
-                    defaultTimeEnd={moment().add(1, "day")}>
-                    <TimelineMarkers>
-                        <TodayMarker />
-                    </TimelineMarkers>
-                </Timeline>
-            )}
+
+            <Calendar users={users} leaveTypes={allLeaveTypes} />
+
             <h2 className="mt-2">Interactions</h2>
             <p>
                 <kbd>shift + mousewheel</kbd> to move timeline left/right
@@ -112,11 +65,22 @@ export default function Home() {
             <p>
                 <kbd>alt + mousewheel</kbd> to zoom in/out
             </p>
+            <p>
+                <kbd>ctrl + mousewheel</kbd> to zoom in/out 10× faster
+            </p>
+            <p>
+                <kbd>(win or cmd) + mousewheel</kbd> to zoom in/out 3x faster
+            </p>
             {/* <pre>Current User: {JSON.stringify(user, null, 2)}</pre> */}
-            <NewRequestModal
-                modalVisible={newRequestVisible}
-                setModalVisible={setNewRequestVisible}
-            />
+            {newRequestVisible && (
+                <NewRequestModal
+                    modalVisible={newRequestVisible}
+                    setModalVisible={setNewRequestVisible}
+                    users={users}
+                    allLeaveTypes={allLeaveTypes}
+                    allRuleGroups={allRuleGroups}
+                />
+            )}
         </Container>
     );
 }

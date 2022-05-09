@@ -68,6 +68,12 @@ button {
     align-items: center;
 }
 
+.headerSticky {
+    position: sticky;
+    top: 70px;
+    z-index: 100;
+}
+
 /* Custom Scrollbar */
 body::-webkit-scrollbar {
     width: 12px; /* width of the entire scrollbar */

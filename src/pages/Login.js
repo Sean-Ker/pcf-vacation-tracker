@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { Image, Form, InputGroup, Alert } from "react-bootstrap";
 import { Formik, Field, Form as FormikForm, useField, FieldAttributes } from "formik";
 import * as yup from "yup";
@@ -18,15 +18,13 @@ export default function Login({ logout }) {
         password: yup.string().required().min(6),
     });
 
-    useEffect(() => {
-        if (logout) {
-            // console.log("logging out...");
-            setUser(null);
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
-            window.location.replace("/");
-        }
-    }, [setUser, logout]);
+    if (logout) {
+        // console.log("logging out...");
+        setUser(null);
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        window.location.replace("/");
+    }
 
     if (user !== null) {
         window.location.replace("/");

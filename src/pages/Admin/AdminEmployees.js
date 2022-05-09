@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { getAllUsers } from "../../api/api";
-import { Table, Select, Typography, Button, Row, Col, Divider } from "antd";
+import { Table, Select, Typography, Button, Row, Col, Divider, List, Card } from "antd";
 import { Container } from "react-bootstrap";
 import { Link as RouterLink } from "react-router-dom";
 import EmployeeName from "../../components/EmployeeName";
@@ -47,12 +47,27 @@ const AdminEmployees = () => {
         fetchUsers();
     }, [createModalVisible, editModalVisible]);
 
+    const allManagersNames = [
+        ...new Map(
+            users.filter(u => u.manager_id !== null).map(item => [item["manager_id"], item])
+        ).values(),
+    ]
+        .map(user => ({
+            text: user.manager.fname + " " + user.manager.lname,
+            value: user.manager.fname + " " + user.manager.lname,
+        }))
+        .sort((a, b) => (a.text === b.text ? 0 : a.text < b.text ? -1 : 1));
+
+    allManagersNames.unshift({ text: "None", value: "None" });
+
+    const usersNoManager = users.filter(user => user.manager_id === null);
+
     const dataSource = users.map(user => ({
         ...user,
         key: user._id,
         name: user.fname + " " + user.lname,
+        manager_name: user.manager ? user.manager.fname + " " + user.manager.lname : "None",
         department: user.department.name,
-        manager: user.manager ? user.manager : "",
         status: user.is_active,
         role: user.is_admin ? "Admin" : user.employees.length === 0 ? "Employee" : "Manager",
         edit: "",
@@ -101,6 +116,30 @@ const AdminEmployees = () => {
             filterSearch: true,
             sorter: (a, b) =>
                 a.department === b.department ? 0 : a.department < b.department ? -1 : 1,
+        },
+        {
+            title: "Manager",
+            dataIndex: "manager_id",
+            key: "manager_id",
+            render: (text, user) =>
+                user["manager"] ? (
+                    <RouterLink
+                        to={`/user/${user["manager"]["username"]}`}
+                        style={{ textDecoration: "none" }}>
+                        <EmployeeName
+                            fname={user["manager"].fname}
+                            lname={user["manager"].lname}
+                            country_code={user["manager"].country_id}
+                        />
+                    </RouterLink>
+                ) : (
+                    "None"
+                ),
+            filters: allManagersNames,
+            filterSearch: true,
+            onFilter: (value, record) => record.manager_name.indexOf(value) === 0,
+            sorter: (a, b) =>
+                a.manager_name === b.manager_name ? 0 : a.manager_name < b.manager_name ? -1 : 1,
         },
         {
             title: "Status",
@@ -171,7 +210,9 @@ const AdminEmployees = () => {
     if (loading > 0) {
         return (
             <Container>
-                <Typography.Title level={2}>All Employees</Typography.Title>
+                <Divider orientation="left" style={{ fontWeight: "bold" }}>
+                    All Employees
+                </Divider>
                 <Table loading={true} columns={columns} />
             </Container>
         );
@@ -191,26 +232,71 @@ const AdminEmployees = () => {
 
     return (
         <Container>
-            {users.length !== 0 && (
-                <Row>
-                    <Col span={12}>
-                        <Typography.Title level={2}>Company CEO</Typography.Title>
-                        <CeoSelect ceoId={ceoId} setCeoId={setCeoId} users={users} />
-                    </Col>
-                    <Col span={12}>
-                        {user && ceoId && (
-                            <>
-                                <Typography.Title level={2}>Company Hierarchy</Typography.Title>
-                                <CompanyHierarchy users={users} ceo_id={ceoId} />
-                            </>
-                        )}
-                    </Col>
-                </Row>
-            )}
-            <Divider />
-            <Typography.Title level={2}>All Employees</Typography.Title>
+            <Row justify="space-between">
+                <Col xs={24} md={11}>
+                    {users.length !== 0 && (
+                        <>
+                            <Divider orientation="left" style={{ fontWeight: "bold" }}>
+                                Company Hierarchy
+                            </Divider>
+                            <CompanyHierarchy users={users} />
+                        </>
+                    )}
+                </Col>
+                <Col xs={24} md={11}>
+                    {usersNoManager.length !== 0 && (
+                        <>
+                            <Divider orientation="left" style={{ fontWeight: "bold" }}>
+                                Employees with No Manager
+                            </Divider>
+                            {/* <Divider /> */}
+                            {/* <Typography.Title level={2}>Users with no Manager</Typography.Title> */}
+                            <List
+                                loading={loading > 0}
+                                grid={{ xs: 1, sm: 2, md: 1, lg: 2, xl: 2, xxl: 2 }}
+                                dataSource={usersNoManager}
+                                renderItem={user => (
+                                    <List.Item>
+                                        <div
+                                            onClick={e => {
+                                                setEditModalVisible(true);
+                                                setEditEmployee(user);
+                                            }}>
+                                            <Card
+                                                style={{
+                                                    margin: "0px 10px 10px 10px",
+                                                    borderRadius: "10px",
+                                                    overflow: "hidden",
+                                                    textAlign: "center",
+                                                    fontWeight: "bold",
+                                                }}
+                                                hoverable={true}
+                                                actions={["edit"]}>
+                                                <RouterLink
+                                                    to={`/user/${user.username}`}
+                                                    style={{ textDecoration: "none" }}>
+                                                    <EmployeeName
+                                                        fname={user.fname}
+                                                        lname={user.lname}
+                                                        country_code={user.country_id}
+                                                    />
+                                                </RouterLink>
+                                            </Card>
+                                        </div>
+                                    </List.Item>
+                                )}
+                            />
+                        </>
+                    )}
+                </Col>
+            </Row>
+
+            <Divider orientation="left" style={{ fontWeight: "bold" }}>
+                All Employees
+            </Divider>
+            {/* <Typography.Title level={2}>All Employees</Typography.Title> */}
             <Button type="primary" size="large" onClick={() => setCreateModalVisible(true)}>
-                Create Employee
+                Add New Employee
             </Button>
             <br />
             <br />

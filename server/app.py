@@ -19,10 +19,12 @@ from db import db
 from resources.auth import api as auth_blueprint
 from resources.departments import api as departments_namespace
 from resources.leave_types import api as leave_types_namespace
+from resources.leave_requests import api as leave_requests_namespace
 from resources.locations import api as locations_namespace
 from resources.rule_groups import api as rule_groups_namespace
 from resources.users import api as users_namespace
 from resources.companies import api as companies_namespace
+from resources.logs import api as logs_namespace
 
 app = Flask(__name__, static_folder="../build", static_url_path="/")
 app.config["PROPAGATE_EXCEPTIONS"] = True
@@ -44,9 +46,11 @@ api.add_namespace(auth_blueprint)
 api.add_namespace(users_namespace)
 api.add_namespace(departments_namespace)
 api.add_namespace(leave_types_namespace)
+api.add_namespace(leave_requests_namespace)
 api.add_namespace(locations_namespace)
 api.add_namespace(rule_groups_namespace)
 api.add_namespace(companies_namespace)
+api.add_namespace(logs_namespace)
 api.init_app(app)
 
 jwt = JWTManager(app)

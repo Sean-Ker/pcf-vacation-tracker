@@ -38,14 +38,13 @@ const CreateUserModal = props => {
             onOk={() => {
                 form.validateFields()
                     .then(async values => {
-                        if (values["manager"] === "") values["manager"] = null;
                         setLoading(true);
-                        let axiosData = _.pick(values, ["fname", "lname", "email"]);
+                        if (values["manager"] === "") values["manager"] = null;
+                        let axiosData = _.pick(values, ["fname", "lname", "email", "employees"]);
                         axiosData = {
                             ...axiosData,
                             department_id: values["department"],
                             manager_id: values["manager"],
-                            managed_employees_ids: values["employees"],
                             is_admin: values["isAdmin"],
                         };
                         axios
@@ -136,7 +135,7 @@ const CreateUserModal = props => {
                         filterOption={(input, option) =>
                             option.name.toLowerCase().indexOf(input.toLowerCase()) > -1
                         }>
-                        {users
+                        {[...users]
                             .sort((a, b) =>
                                 a["fname"] + " " + a["lname"] > b["fname"] + " " + b["lname"]
                                     ? 1
@@ -164,7 +163,7 @@ const CreateUserModal = props => {
                         filterOption={(input, option) =>
                             option.name.toLowerCase().indexOf(input.toLowerCase()) > -1
                         }>
-                        {users
+                        {[...users]
                             .sort((a, b) =>
                                 a["fname"] + " " + a["lname"] > b["fname"] + " " + b["lname"]
                                     ? 1

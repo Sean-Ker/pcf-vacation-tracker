@@ -7,7 +7,7 @@ const { Search } = Input;
 
 function generateTreeData(users, root, searchValue) {
     let data = {
-        title: (
+        title: root["username"] ? (
             <Link to={`/user/${root["username"]}`} style={{ textDecoration: "none" }}>
                 <EmployeeName
                     fname={root["fname"]}
@@ -23,6 +23,8 @@ function generateTreeData(users, root, searchValue) {
                     }
                 />
             </Link>
+        ) : (
+            <span>{`${root["fname"]} ${root["lname"]}`}</span>
         ),
         name: `${root["fname"]} ${root["lname"]}`,
         key: root["_id"],
@@ -43,13 +45,13 @@ function generateTreeData(users, root, searchValue) {
     return data;
 }
 
-const CompanyHierarchy = ({ users, ceo_id }) => {
+const CompanyHierarchy = ({ users }) => {
     const [searchValue, setSearchValue] = useState("");
     const [expandedKeys, setExpandedKeys] = useState();
     const [autoExpandParent, setAutoExpandParent] = useState(true);
 
-    const root_node = users.filter(u => u["_id"] === ceo_id)[0];
-    const treeData = [generateTreeData(users, root_node, searchValue)];
+    const root_nodes = users.filter(u => u["manager_id"] === null);
+    const treeData = root_nodes.map(node => generateTreeData(users, node, searchValue));
 
     const dataList = [];
     const generateList = data => {
@@ -99,28 +101,31 @@ const CompanyHierarchy = ({ users, ceo_id }) => {
                 return null;
             })
             .filter((item, i, self) => item && self.indexOf(item) === i);
-        console.log(expandedKeys);
+        // console.log(expandedKeys);
         setExpandedKeys(expandedKeys);
         setSearchValue(value);
         setAutoExpandParent(true);
     };
 
     return (
-        <div style={{ width: 300 }}>
+        <>
             {/* {JSON.stringify(treeData)} */}
-            <Search
-                style={{ marginBottom: 8 }}
-                placeholder="Search Employee"
-                onChange={onSearchChange}
-                value={searchValue}
-            />
-            <Tree
-                treeData={treeData}
-                onExpand={onExpand}
-                expandedKeys={expandedKeys}
-                autoExpandParent={autoExpandParent}
-            />
-        </div>
+            <Input.Group compact>
+                <Search
+                    style={{ marginBottom: 8 }}
+                    placeholder="Search Employee"
+                    onChange={onSearchChange}
+                    value={searchValue}
+                />
+                <br />
+                <Tree
+                    treeData={treeData}
+                    onExpand={onExpand}
+                    expandedKeys={expandedKeys}
+                    autoExpandParent={autoExpandParent}
+                />
+            </Input.Group>
+        </>
     );
 };
 

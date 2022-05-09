@@ -36,19 +36,21 @@ export default function Topbar() {
                 <Navbar.Collapse id="main-navbar">
                     <Nav className="me-auto">
                         {user && (
-                            <Link to="/" className="nav-link">
-                                Calendar
-                            </Link>
-                        )}
-                        {user.employees.length > 0 && (
-                            <Link to="/managment" className="nav-link">
-                                Managment
-                            </Link>
-                        )}
-                        {user.is_admin && (
-                            <Link to="/admin" className="nav-link">
-                                Admin
-                            </Link>
+                            <>
+                                <Link to="/" className="nav-link">
+                                    Calendar
+                                </Link>
+                                {user.employees.length > 0 && (
+                                    <Link to="/managment" className="nav-link">
+                                        Managment
+                                    </Link>
+                                )}
+                                {user.is_admin && (
+                                    <Link to="/admin" className="nav-link">
+                                        Admin
+                                    </Link>
+                                )}
+                            </>
                         )}
                     </Nav>
                     <Nav className="align-items-center">

@@ -1,21 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { Button, List, Typography, Card, Modal, Input, Form, Popover, Spin } from "antd";
+import {
+    Button,
+    List,
+    Typography,
+    Card,
+    Modal,
+    Input,
+    Form,
+    Popover,
+    Spin,
+    Popconfirm,
+} from "antd";
 
 import axios from "../../api/axios";
 import EmployeeName from "../EmployeeName";
 import { Link } from "react-router-dom";
 
-const CreateDepartmentModal = ({ id, modalVisible, setModalVisible }) => {
-    const [department, setDepartment] = useState();
+const CreateDepartmentModal = ({ department, setDepartment, modalVisible, setModalVisible }) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchDepartment = async () => {
-            setLoading(true);
-            const departmentRes = await axios.get(`/departments/${id}`);
-            if (departmentRes === null) {
-                setDepartment(null);
+            const id = department["_id"]["$oid"];
+            let departmentRes = await axios.get(`/departments/${id}`);
+            if (!departmentRes) {
                 return;
             }
             setDepartment(departmentRes["data"]);
@@ -25,16 +34,11 @@ const CreateDepartmentModal = ({ id, modalVisible, setModalVisible }) => {
             setLoading(false);
         };
         fetchDepartment();
-    }, [id, modalVisible, form]);
+    }, [modalVisible, form]);
 
     if (loading) {
         return (
-            <Modal
-                width={800}
-                height={400}
-                visible={modalVisible}
-                confirmLoading={loading}
-                okText="Save">
+            <Modal width={800} visible={modalVisible} confirmLoading={loading} okText="Save">
                 <div style={{ textAlign: "center", padding: "130px 50px" }}>
                     <Spin size="large" />
                 </div>
@@ -55,10 +59,10 @@ const CreateDepartmentModal = ({ id, modalVisible, setModalVisible }) => {
                     .then(async values => {
                         if (!department) return;
                         const new_name = values["name"];
-                        await axios.put(`/departments/${department["_id"]}`, {
+                        await axios.put(`/departments/${department["_id"]["$oid"]}`, {
                             name: new_name,
                         });
-                        setDepartment(prevDepartment => ({ ...prevDepartment, name: new_name }));
+                        // setDepartment(prevDepartment => ({ ...prevDepartment, name: new_name }));
                         form.resetFields();
                         setModalVisible(false);
                     })
@@ -109,18 +113,20 @@ const CreateDepartmentModal = ({ id, modalVisible, setModalVisible }) => {
                 )}
             />
             <Popover content="You can only delete a department with no employees!">
-                <Button
-                    danger
-                    block
-                    disabled={department && department["employees"].length !== 0}
-                    onClick={async () => {
+                <Popconfirm
+                    title="Are you sure to delete this department?"
+                    onConfirm={async () => {
                         if (department !== null) {
-                            await axios.patch(`/departments/${department["_id"]}`);
+                            await axios.patch(`/departments/${department["_id"]["$oid"]}`);
                             setModalVisible(false);
                         }
-                    }}>
-                    Delete {department ? department["name"] : ""}
-                </Button>
+                    }}
+                    okText="Yes"
+                    cancelText="No">
+                    <Button danger block disabled={department["employees"].length !== 0}>
+                        Delete {department ? department["name"] : ""}
+                    </Button>
+                </Popconfirm>
             </Popover>
         </Modal>
     );

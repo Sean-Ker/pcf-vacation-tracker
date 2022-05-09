@@ -4,12 +4,13 @@ import { allDepartments } from "../../api/api";
 import Container from "../../components/Container";
 import CreateDepartmentModal from "../../components/Modals/CreateDepartmentModal";
 import EditDepartmentModal from "../../components//Modals/EditDepartmentModal";
+import { Link } from "react-router-dom";
 
 const AdminDepartments = () => {
+    const [editDepartment, setEditDepartment] = useState(null);
     const [departments, setDepartments] = useState([]);
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
-    const [editDepartmentId, setEditDepartmentId] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -20,11 +21,6 @@ const AdminDepartments = () => {
         }
         fetchDepartments();
     }, [createModalVisible, editModalVisible]);
-
-    const handleEditClick = department => {
-        setEditModalVisible(true);
-        setEditDepartmentId(department["_id"]);
-    };
 
     return (
         <Container>
@@ -39,34 +35,41 @@ const AdminDepartments = () => {
                 dataSource={departments}
                 loading={loading}
                 renderItem={item => (
-                    <Card
-                        style={{
-                            margin: "10px",
-                            borderRadius: "10px",
-                            overflow: "hidden",
-                            textAlign: "center",
-                            marginTop: 12,
-                            fontWeight: "bold",
-                        }}
-                        hoverable={true}
-                        actions={[
-                            <Button type="link" onClick={e => handleEditClick(item)}>
-                                edit
-                            </Button>,
-                        ]}>
-                        {item.name}
-                    </Card>
+                    <div
+                        onClick={e => {
+                            setEditModalVisible(true);
+                            setEditDepartment(item);
+                        }}>
+                        <Card
+                            style={{
+                                margin: "10px",
+                                borderRadius: "10px",
+                                overflow: "hidden",
+                                textAlign: "center",
+                                marginTop: 12,
+                                fontWeight: "bold",
+                            }}
+                            hoverable={true}
+                            actions={["edit"]}>
+                            {item.name}
+                        </Card>
+                    </div>
                 )}
             />
-            <CreateDepartmentModal
-                modalVisible={createModalVisible}
-                setModalVisible={setCreateModalVisible}
-            />
-            <EditDepartmentModal
-                id={editDepartmentId}
-                modalVisible={editModalVisible}
-                setModalVisible={setEditModalVisible}
-            />
+            {createModalVisible && (
+                <CreateDepartmentModal
+                    modalVisible={createModalVisible}
+                    setModalVisible={setCreateModalVisible}
+                />
+            )}
+            {editDepartment && editModalVisible && (
+                <EditDepartmentModal
+                    department={editDepartment}
+                    setDepartment={setEditDepartment}
+                    modalVisible={editModalVisible}
+                    setModalVisible={setEditModalVisible}
+                />
+            )}
         </Container>
     );
 };

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { FaWindows } from "react-icons/fa";
+import { setJwt } from "./api";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -26,8 +27,9 @@ const fetchClient = () => {
     instance.interceptors.response.use(response => {
         if (response.status === 401) {
             debugger;
-            window.location.replace("/");
+            window.location.replace("/login");
         }
+
         const refresh_token = localStorage.getItem("refresh_token");
         if (refresh_token === null) {
             return response;
@@ -46,8 +48,11 @@ const fetchClient = () => {
             .catch(error => {
                 console.log(error);
                 debugger;
-                window.location.replace("/login");
+                localStorage.removeItem("access_token");
+                localStorage.removeItem("refresh_token");
+                // window.location.replace("/login");
             });
+
         return response;
     });
 

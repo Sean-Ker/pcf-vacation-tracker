@@ -31,7 +31,7 @@ class Companies(Resource):
     def post(self):
         data = request.json
         if set(data.keys()) != {"name"}:
-            return Response("Invalid paramaters", 400)
+            return Response("Error: Invalid paramaters", 400)
 
         db.companies.insert_one({**data, "ceo_id": None})
         return Response(f"Successfully created the company {data['name']}.", 200)
@@ -40,7 +40,7 @@ class Companies(Resource):
     def put(self):
         data = request.json
         if set(data.keys()) != {"name", "ceo_id"}:
-            return Response("Invalid paramaters", 400)
+            return Response("Error: Invalid paramaters", 400)
 
         company_id = get_jwt()["company_id"]
         db.companies.update_one({"_id": ObjectId(company_id)}, {"$set": {**data}})

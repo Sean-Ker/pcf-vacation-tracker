@@ -24,6 +24,8 @@ const EditUserModal = props => {
     const [form] = Form.useForm();
     const { Option } = Select;
 
+    const usersCopy = [...users];
+
     useEffect(() => {
         setError({ visible: false, message: "" });
         form.setFieldsValue({
@@ -58,7 +60,34 @@ const EditUserModal = props => {
             onOk={() => {
                 form.validateFields()
                     .then(async values => {
-                        console.log(values);
+                        setLoading(true);
+                        if (!values["manager"]) {
+                            values["manager"] = null;
+                        }
+                        let axiosData = _.pick(values, ["employees", "leaves"]);
+                        axiosData = {
+                            ...axiosData,
+                            department_id: values["department"],
+                            manager_id: values["manager"],
+                            is_admin: values["isAdmin"],
+                        };
+                        console.log(axiosData);
+                        axios
+                            .put("/users/" + user["_id"], axiosData)
+                            .then(() => {
+                                message.success(
+                                    `Successfully edit ${axiosData["fname"]} ${axiosData["lname"]}'s information`
+                                );
+                                form.resetFields();
+                                setModalVisible(false);
+                                setError({ visible: false, message: "" });
+                            })
+                            .catch(res => {
+                                setError({ visible: true, message: res["response"]["data"] });
+                            })
+                            .finally(() => {
+                                setLoading(false);
+                            });
                     })
                     .catch(info => {
                         console.log("Validate Failed:", info);
@@ -67,7 +96,6 @@ const EditUserModal = props => {
             onCancel={() => {
                 setModalVisible(false);
             }}>
-            {/* {JSON.stringify(users)} */}
             {error["visible"] && (
                 <Alert
                     closable
@@ -81,25 +109,13 @@ const EditUserModal = props => {
 
             <Form form={form} labelCol={{ span: 8 }} size="large">
                 <Divider>General Information</Divider>
-                <Form.Item
-                    name="fname"
-                    label="First Name:"
-                    rules={[{ required: true, message: "Please input first name!" }]}>
+                <Form.Item name="fname" label="First Name:">
                     <Input size="large" disabled />
                 </Form.Item>
-                <Form.Item
-                    name="lname"
-                    label="Last Name:"
-                    rules={[{ required: true, message: "Please input last name!" }]}>
+                <Form.Item name="lname" label="Last Name:">
                     <Input size="large" disabled />
                 </Form.Item>
-                <Form.Item
-                    name="email"
-                    label="Email:"
-                    rules={[
-                        { required: true, message: "Please input an email!" },
-                        { type: "email", message: "Please input a valid email address!" },
-                    ]}>
+                <Form.Item name="email" label="Email:">
                     <Input size="large" disabled />
                 </Form.Item>
                 <Form.Item name="username" label="Username:">
@@ -134,7 +150,7 @@ const EditUserModal = props => {
                         filterOption={(input, option) =>
                             option.name.toLowerCase().indexOf(input.toLowerCase()) > -1
                         }>
-                        {users
+                        {usersCopy
                             .sort((a, b) =>
                                 a["fname"] + " " + a["lname"] > b["fname"] + " " + b["lname"]
                                     ? 1
@@ -162,7 +178,7 @@ const EditUserModal = props => {
                         filterOption={(input, option) =>
                             option.name.toLowerCase().indexOf(input.toLowerCase()) > -1
                         }>
-                        {users
+                        {usersCopy
                             .sort((a, b) =>
                                 a["fname"] + " " + a["lname"] > b["fname"] + " " + b["lname"]
                                     ? 1
@@ -170,9 +186,10 @@ const EditUserModal = props => {
                             )
                             .map(lt => (
                                 <Option
-                                    disabled={lt["manager"] !== null}
+                                    // disabled={lt["manager"] !== null}
                                     key={lt["_id"]}
                                     value={lt["_id"]}
+                                    label={lt["fname"] + " " + lt["lname"]}
                                     name={lt["fname"] + " " + lt["lname"]}>
                                     <EmployeeName
                                         fname={lt["fname"]}

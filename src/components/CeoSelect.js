@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Select, Spin, Typography } from "antd";
+import { Select, Spin, Typography, Form } from "antd";
 import EmployeeName from "./EmployeeName";
 import axios from "../api/axios";
 
@@ -28,34 +28,41 @@ const CeoSelect = ({ ceoId, setCeoId, users }) => {
     }
 
     return (
-        <div style={{ marginBottom: "8px" }}>
-            <Typography.Text>CEO: </Typography.Text>
-            <Select
-                showSearch
-                allowClear
-                style={{ width: "260px" }}
-                loading={loading}
-                placeholder={`Select the CEO of ${company["name"]}`}
-                optionFilterProp="children"
-                onChange={value => {
-                    setCeoId(value);
-                    axios.put("/companies", { name: company["name"], ceo_id: value });
-                }}
-                defaultValue={ceoId}
-                filterOption={(input, option) =>
-                    option.name.toLowerCase().indexOf(input.toLowerCase()) > -1
-                }>
-                {users.map(u => (
-                    <Option name={u["fname"] + " " + u["lname"]} key={u["_id"]} value={u["_id"]}>
-                        <EmployeeName
-                            fname={u["fname"]}
-                            lname={u["lname"]}
-                            country_code={u["country_id"]}
-                        />
-                    </Option>
-                ))}
-            </Select>
-        </div>
+        <Form>
+            {/* <Typography.Text>Select the CEO: </Typography.Text>{" "} */}
+            <Form.Item label={`Select the CEO of ${company["name"]}`}>
+                <Select
+                    showSearch
+                    allowClear
+                    loading={loading}
+                    // placeholder={`Select the CEO of ${company["name"]}`}
+                    optionFilterProp="children"
+                    onChange={value => {
+                        if (value) {
+                            setCeoId(value);
+                            axios.put("/companies", { name: company["name"], ceo_id: value });
+                        }
+                    }}
+                    defaultValue={ceoId}
+                    filterOption={(input, option) =>
+                        option.name.toLowerCase().indexOf(input.toLowerCase()) > -1
+                    }>
+                    {users.map(u => (
+                        <Option
+                            label={u["fname"] + " " + u["lname"]}
+                            name={u["fname"] + " " + u["lname"]}
+                            key={u["_id"]}
+                            value={u["_id"]}>
+                            <EmployeeName
+                                fname={u["fname"]}
+                                lname={u["lname"]}
+                                country_code={u["country_id"]}
+                            />
+                        </Option>
+                    ))}
+                </Select>
+            </Form.Item>
+        </Form>
     );
 };
 

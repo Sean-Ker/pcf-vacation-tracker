@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet, Link } from "react-router-dom";
 import Topbar from "./components/Topbar";
 import { UserContext, LoadingContext, CountriesContext } from "./Contexts";
-import { getCurrentUser } from "./api/api";
+import { getAccessToken, getCurrentUser } from "./api/api";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Managment from "./pages/Managment";
@@ -24,24 +24,34 @@ export default function App() {
     const [loading, setLoading] = useState(1);
     const [countries, setCountries] = useState([]);
 
+    const access_token = getAccessToken();
+
     useEffect(() => {
-        async function fetchUser() {
+        async function fetchData() {
             const user = await getCurrentUser();
             setUser(user);
             const allCountries = await axios.get(`/locations`);
             setCountries(allCountries["data"]);
-            setLoading(prevLoading => (prevLoading -= 1));
+            setLoading(prevLoading => prevLoading - 1);
         }
-        fetchUser();
+        fetchData();
     }, []);
 
     // only change value (on render) if user or setUser changes
     const value = useMemo(() => ({ user, setUser }), [user, setUser]);
 
     // console.log(window.location.href);
-    if (loading !== 0) {
-        return <LoadingScreen />;
-    } else if (user === null && !window.location.href.toLowerCase().includes("/register")) {
+    if (!access_token && !window.location.href.toLowerCase().includes("/register")) {
+        return (
+            <UserContext.Provider value={value}>
+                <Login />;
+            </UserContext.Provider>
+        );
+    }
+    //  else if (loading !== 0) {
+    //     return <LoadingScreen />;
+    // }
+    else if (!user && loading === 0 && !window.location.href.toLowerCase().includes("/register")) {
         return (
             <UserContext.Provider value={value}>
                 <Login />;
