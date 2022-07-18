@@ -1,14 +1,17 @@
+// File imports
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
+// import App from "./App2";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-calendar-timeline/lib/Timeline.css";
 
 ReactDOM.render(
-    // <React.StrictMode>
-    <App />,
-    // </React.StrictMode>,
+    <React.StrictMode>
+        {/* <App fn={"Sean"} ln={"Kuznetsov"} /> */}
+        <App />
+    </React.StrictMode>,
     document.getElementById("root")
 );
 

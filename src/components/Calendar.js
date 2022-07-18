@@ -61,8 +61,14 @@ const itemRenderer = ({ item, timelineContext, itemContext, getItemProps, getRes
 const Calendar = ({ users, leaveTypes }) => {
     const { user: currentUser } = useContext(UserContext);
 
-    const defaultTimeStart = moment().startOf("month").toDate();
-    const defaultTimeEnd = moment().startOf("month").add(2, "month").toDate();
+    moment.locale("en", {
+        week: {
+            dow: 1,
+        },
+    });
+
+    const defaultTimeStart = moment().startOf("week").toDate();
+    const defaultTimeEnd = moment().startOf("week").add(1, "week").toDate();
 
     const groups = users
         .filter(u => u["is_active"])
@@ -96,7 +102,7 @@ const Calendar = ({ users, leaveTypes }) => {
                 group: u["_id"],
                 title: `${leaveRequestType["name"]} - ${leaveRequest["status"]}`,
                 start_time: moment(leaveRequest["start_date"]),
-                end_time: moment(leaveRequest["end_date"]),
+                end_time: moment(leaveRequest["end_date"]).add(1, "days"), // Adding one day to account for inclusive dates, where library expects exclusive end date.
                 background: leaveRequestType["color"],
                 color: pickTextColorBasedOnBgColor(leaveRequestType["color"]),
             });

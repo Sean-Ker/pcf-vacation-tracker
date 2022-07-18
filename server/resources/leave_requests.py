@@ -52,10 +52,12 @@ def get_overlapping_users(leaving_user, start_date: str, end_date: str):
 
             for other_leave_id in other_emp.get("leave_requests", []):
                 other_leave = other_emp["leave_requests"][other_leave_id]
+
                 if (
                     other_leave["status"] == "APPROVED"
                     and datetime.fromisoformat(other_leave["end_date"]) >= datetime.fromisoformat(start_date)
-                ) and (datetime.fromisoformat(other_leave["start_date"]) <= datetime.fromisoformat(end_date)):
+                    and datetime.fromisoformat(other_leave["start_date"]) <= datetime.fromisoformat(end_date)
+                ):
                     overlapping.append(
                         {"rule_group_id": str(rg["_id"]), "user_id": emp_id, "user_leave_id": other_leave_id}
                     )
@@ -294,6 +296,8 @@ class NewRequestOverlap(Resource):
             return Response(f"Error: Leave request with ID {id} does not exist. Please report.", 400)
 
         overlapping_ids = get_overlapping_users(leaving_user, data["start_date"], data["end_date"])
+        if type(overlapping_ids) == Response:
+            return overlapping_ids
         return Response(json_util.dumps(overlapping_ids), 200)
 
 
