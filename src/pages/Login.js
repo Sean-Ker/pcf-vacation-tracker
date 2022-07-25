@@ -3,13 +3,13 @@ import { Image, Form, InputGroup, Alert } from "react-bootstrap";
 import { Formik, Field, Form as FormikForm, useField, FieldAttributes } from "formik";
 import * as yup from "yup";
 import { setJwt } from "../api/api";
-import { UserContext } from "../Contexts";
+import { IdentityContext } from "../Contexts";
 import { FaUser, FaLock } from "react-icons/fa";
 import axios from "../api/axios";
 // import { useNavigate } from "react-router";
 
 export default function Login({ logout }) {
-    const { user, setUser } = useContext(UserContext);
+    const { user, setUser } = useContext(IdentityContext);
     const [error, setError] = useState("");
     // status is either null -> no msg displayed, true -> logging in or false -> error.
 

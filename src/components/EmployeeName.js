@@ -1,11 +1,18 @@
+import styled from "styled-components";
 import React, { useState, useEffect, useContext } from "react";
 import ReactCountryFlag from "react-country-flag";
 import axios from "../api/axios";
 import { CountriesContext } from "../Contexts";
 
+const FlagIcon = styled(ReactCountryFlag)`
+    margin-right: 5px;
+    font-size: 1.5em;
+`;
+
 const EmployeeName = ({ fname, lname, country_code, style = null }) => {
     // const [country, setCountry] = useState();
     const { countries } = useContext(CountriesContext);
+
     // useEffect(() => {
     //     // const fetchCountry = async () => {
     //     //     const countryRes = await axios.get( `/locations/${country_code}`);
@@ -30,14 +37,9 @@ const EmployeeName = ({ fname, lname, country_code, style = null }) => {
 
     return (
         <>
-            <ReactCountryFlag
+            <FlagIcon
                 countryCode={country["_id"]}
                 svg
-                style={{
-                    fontSize: "2em",
-                    marginRight: "5px",
-                    // lineHeight: "2em",
-                }}
                 title={country ? country["name"] : ""}
                 aria-label={country ? country["name"] : ""}
             />{" "}

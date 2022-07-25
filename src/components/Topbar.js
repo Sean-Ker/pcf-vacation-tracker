@@ -1,11 +1,11 @@
 import React, { useState, useContext, useEffect } from "react";
 import { Navbar, Nav, Container, Button } from "react-bootstrap";
-import { UserContext } from "../Contexts";
+import { IdentityContext } from "../Contexts";
 import { Link } from "react-router-dom";
 import styles from "./Topbar.module.css";
 
 export default function Topbar() {
-    const { user } = useContext(UserContext);
+    const { user } = useContext(IdentityContext);
     // console.log(JSON.stringify(user));
     // bg="light" fixed="top" expand="md"
 

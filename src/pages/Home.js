@@ -2,28 +2,25 @@ import React, { useEffect, useState, useContext } from "react";
 
 // make sure you include the timeline stylesheet or the timeline will not be styled
 import "react-calendar-timeline/lib/Timeline.css";
-import { getAllUsers } from "../api/api";
 import { Button, Typography, message } from "antd";
 import { Container } from "react-bootstrap";
 import NewRequestModal from "../components/Modals/NewRequestModal";
 import Calendar from "../components/Calendar";
 import axios from "../api/axios";
-import { UserContext } from "../Contexts";
+import { IdentityContext, UsersContext } from "../Contexts";
 
 export default function Home() {
-    const { user } = useContext(UserContext);
+    const { user } = useContext(IdentityContext);
+    const { users } = useContext(UsersContext);
     const [loading, setLoading] = useState(1);
-    const [users, setUsers] = useState([]);
     const [allLeaveTypes, setAllLeaveTypes] = useState([]);
     const [allRuleGroups, setAllRuleGroups] = useState([]);
     const [newRequestVisible, setNewRequestVisible] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
-            const users = await getAllUsers();
             const leaveTypes = await axios.get("/leave_types");
             const ruleGroups = await axios.get("/rule_groups");
-            setUsers(users);
             setAllLeaveTypes(leaveTypes["data"]);
             setAllRuleGroups(ruleGroups["data"]);
             setLoading(prevLoading => prevLoading - 1);

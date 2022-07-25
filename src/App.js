@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet, Link } from "react-router-dom";
 import Topbar from "./components/Topbar";
-import { UserContext, LoadingContext, CountriesContext } from "./Contexts";
-import { getAccessToken, getCurrentUser } from "./api/api";
+import { IdentityContext, CountriesContext, UsersContext } from "./Contexts";
+import { getAccessToken, getAllUsers, getCurrentUser } from "./api/api";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Managment from "./pages/Managment";
@@ -21,41 +21,44 @@ import Register from "./pages/Register";
 
 export default function App() {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(1);
+    const [loading, setLoading] = useState(true);
     const [countries, setCountries] = useState([]);
+    const [users, setUsers] = useState([]);
 
     const access_token = getAccessToken();
 
     useEffect(() => {
         async function fetchData() {
             const user = await getCurrentUser();
-            setUser(user);
             const allCountries = await axios.get(`/locations`);
+            const allUsers = await getAllUsers(true);
+            setUser(user);
             setCountries(allCountries["data"]);
-            setLoading(prevLoading => prevLoading - 1);
+            setUsers(allUsers);
+            setLoading(false);
         }
         fetchData();
     }, []);
 
     // only change value (on render) if user or setUser changes
-    const value = useMemo(() => ({ user, setUser }), [user, setUser]);
+    const userMemo = useMemo(() => ({ user, setUser }), [user, setUser]);
 
     // console.log(window.location.href);
     if (!access_token && !window.location.href.toLowerCase().includes("/register")) {
         return (
-            <UserContext.Provider value={value}>
+            <IdentityContext.Provider value={userMemo}>
                 <Login />;
-            </UserContext.Provider>
+            </IdentityContext.Provider>
         );
     }
     //  else if (loading !== 0) {
     //     return <LoadingScreen />;
     // }
-    else if (!user && loading === 0 && !window.location.href.toLowerCase().includes("/register")) {
+    else if (!user && !loading && !window.location.href.toLowerCase().includes("/register")) {
         return (
-            <UserContext.Provider value={value}>
+            <IdentityContext.Provider value={userMemo}>
                 <Login />;
-            </UserContext.Provider>
+            </IdentityContext.Provider>
         );
     } else if (window.location.href.toLowerCase().includes("/register/")) {
         return <Register />;
@@ -63,15 +66,15 @@ export default function App() {
 
     return (
         <div style={{ width: "100%", height: "100%", paddingTop: "70px", minHeight: "70rem" }}>
-            <UserContext.Provider value={value}>
-                <LoadingContext.Provider value={{ loading, setLoading }}>
-                    <CountriesContext.Provider value={{ countries }}>
+            <IdentityContext.Provider value={userMemo}>
+                <CountriesContext.Provider value={{ countries }}>
+                    <UsersContext.Provider value={{ users }}>
                         <Router>
                             <Topbar />
                             <div style={{ height: "100%", minHeight: "100%" }}>
                                 <Routes>
                                     <Route path="login" element={<Login />} />
-                                    <Route path="logout" element={<Login logout={true} />} />
+                                    <Route path="logout" element={<Login forceLogout={true} />} />
                                     <Route path="" element={<Home />} />
                                     <Route
                                         path="managment"
@@ -115,9 +118,9 @@ export default function App() {
                                 </Routes>
                             </div>
                         </Router>
-                    </CountriesContext.Provider>
-                </LoadingContext.Provider>
-            </UserContext.Provider>
+                    </UsersContext.Provider>
+                </CountriesContext.Provider>
+            </IdentityContext.Provider>
         </div>
     );
 }

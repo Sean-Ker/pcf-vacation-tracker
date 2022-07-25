@@ -1,11 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
-import { getAllUsers } from "../../api/api";
 import { Table, Select, Typography, Button, Row, Col, Divider, List, Card } from "antd";
 import { Container } from "react-bootstrap";
 import { Link as RouterLink } from "react-router-dom";
 import EmployeeName from "../../components/EmployeeName";
 import axios from "../../api/axios";
-import { UserContext } from "../../Contexts";
+import { UsersContext } from "../../Contexts";
 import CompanyHierarchy from "../../components/CompanyHierarchy";
 import CreateUserModal from "../../components/Modals/CreateUserModal";
 import CeoSelect from "../../components/CeoSelect";
@@ -15,17 +14,14 @@ const { Option } = Select;
 const { Link } = Typography;
 
 const AdminEmployees = () => {
-    const [users, setUsers] = useState([]);
+    const { users } = useContext(UsersContext);
     const [leaveType, setLeaveType] = useState("");
     const [allLeaveTypes, setAllLeaveTypes] = useState([]);
     const [allDepartments, setAllDepartments] = useState([]);
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editEmployee, setEditEmployee] = useState(null);
-    const [loading, setLoading] = useState(3);
-    const [ceoId, setCeoId] = useState(null);
-
-    const { user } = useContext(UserContext);
+    const [loading, setLoading] = useState(2);
 
     const { Text } = Typography;
 
@@ -39,12 +35,6 @@ const AdminEmployees = () => {
             setAllDepartments(response["data"]);
             setLoading(prevLoading => prevLoading - 1);
         });
-        async function fetchUsers() {
-            const allUsers = await getAllUsers(true);
-            setUsers(allUsers);
-            setLoading(prevLoading => prevLoading - 1);
-        }
-        fetchUsers();
     }, [createModalVisible, editModalVisible]);
 
     const allManagersNames = [

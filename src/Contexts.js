@@ -1,8 +1,8 @@
 import { createContext } from "react";
 
-const UserContext = createContext(null);
-const LoadingContext = createContext(false);
+const IdentityContext = createContext(null);
+const UsersContext = createContext([]);
 const CountriesContext = createContext([]);
 // export const IsDesktopContext = createContext(window.innerWidth > 768);
 
-export { UserContext, LoadingContext, CountriesContext };
+export { IdentityContext, UsersContext, CountriesContext };

@@ -14,7 +14,7 @@ import {
     Tooltip,
 } from "antd";
 import axios from "../../api/axios";
-import { UserContext } from "../../Contexts";
+import { IdentityContext } from "../../Contexts";
 
 import EmployeeName from "../EmployeeName";
 import { Link } from "react-router-dom";
@@ -35,7 +35,7 @@ const NewRequestModal = ({
     const [leaveType, setLeaveType] = useState(null);
     const [dateRange, setDateRange] = useState([null, null]);
     const [overlapping, setOverlapping] = useState([]);
-    const { user } = useContext(UserContext);
+    const { user } = useContext(IdentityContext);
 
     const [form] = Form.useForm();
 

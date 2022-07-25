@@ -11,23 +11,8 @@ import Timeline, {
 import moment from "moment";
 import { Link } from "react-router-dom";
 import EmployeeName from "./EmployeeName";
-import { UserContext } from "../Contexts";
-
-function pickTextColorBasedOnBgColor(bgColor) {
-    var color = bgColor.charAt(0) === "#" ? bgColor.substring(1, 7) : bgColor;
-    var r = parseInt(color.substring(0, 2), 16); // hexToR
-    var g = parseInt(color.substring(2, 4), 16); // hexToG
-    var b = parseInt(color.substring(4, 6), 16); // hexToB
-    var uicolors = [r / 255, g / 255, b / 255];
-    var c = uicolors.map(col => {
-        if (col <= 0.03928) {
-            return col / 12.92;
-        }
-        return Math.pow((col + 0.055) / 1.055, 2.4);
-    });
-    var L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-    return L > 0.179 ? "black" : "white";
-}
+import { IdentityContext, UsersContext } from "../Contexts";
+import { pickTextColorBasedOnBgColor } from "../utils";
 
 const itemRenderer = ({ item, timelineContext, itemContext, getItemProps, getResizeProps }) => {
     return (
@@ -58,8 +43,10 @@ const itemRenderer = ({ item, timelineContext, itemContext, getItemProps, getRes
     );
 };
 
-const Calendar = ({ users, leaveTypes }) => {
-    const { user: currentUser } = useContext(UserContext);
+const Calendar = ({ leaveTypes }) => {
+    debugger;
+    const { user } = useContext(IdentityContext);
+    const { users } = useContext(UsersContext);
 
     moment.locale("en", {
         week: {
@@ -72,20 +59,16 @@ const Calendar = ({ users, leaveTypes }) => {
 
     const groups = users
         .filter(u => u["is_active"])
-        .map(user => ({
-            id: user["_id"],
+        .map(u => ({
+            id: u["_id"],
             title: (
                 <Link
-                    to={`/user/${user.username}`}
+                    to={`/user/${u.username}`}
                     style={{
                         textDecoration: "none",
-                        color: user ? (user["_id"] === currentUser["_id"] ? "IndianRed" : "") : "",
+                        color: u ? (u["_id"] === user["_id"] ? "IndianRed" : "") : "",
                     }}>
-                    <EmployeeName
-                        fname={user.fname}
-                        lname={user.lname}
-                        country_code={user.country_id}
-                    />
+                    <EmployeeName fname={u.fname} lname={u.lname} country_code={u.country_id} />
                 </Link>
             ),
         }));

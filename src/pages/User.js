@@ -5,15 +5,11 @@ import axios from "../api/axios";
 import { useParams } from "react-router-dom";
 import EmployeeName from "../components/EmployeeName";
 import LoadingScreen from "../components/LoadingScreen";
-import { LoadingContext } from "../Contexts";
-import NotFound from "./NotFound";
 
 export default function User() {
     const { userName } = useParams();
     const [user, setUser] = useState(null);
-    const { setLoading } = useContext(LoadingContext);
-
-    const { TabPane } = Tabs;
+    const { loading, setLoading } = useState(true);
 
     useEffect(() => {
         async function getUserByUsername() {
@@ -31,22 +27,9 @@ export default function User() {
         <Container>
             <br />
             <Typography.Title>{user.fname}'s Profile</Typography.Title>
-            <Tabs defaultActiveKey="1">
-                <TabPane tab="Profile" key="1">
-                    <EmployeeName
-                        fname={user.fname}
-                        lname={user.lname}
-                        country_code={user.country_id}
-                    />
-                    <pre>{JSON.stringify(user, null, 2)}</pre>
-                </TabPane>
-                <TabPane tab="Leaves" key="2">
-                    Leaves
-                </TabPane>
-                <TabPane tab="Logs" key="3">
-                    Logs
-                </TabPane>
-            </Tabs>
+
+            <EmployeeName fname={user.fname} lname={user.lname} country_code={user.country_id} />
+            <pre>{JSON.stringify(user, null, 2)}</pre>
         </Container>
     ) : (
         <div></div>
