@@ -1,129 +1,129 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { BrowserRouter as Router, Routes, Route, Outlet, Link } from "react-router-dom";
-import Topbar from "./components/Topbar";
-import { IdentityContext, CountriesContext, UsersContext } from "./Contexts";
-import { getAccessToken, getAllUsers, getCurrentUser } from "./api/api";
-import Login from "./pages/Login";
-import Home from "./pages/Home";
-import Managment from "./pages/Managment";
-import Admin from "./pages/Admin/Admin";
-import User from "./pages/User";
-import NotFound from "./pages/NotFound";
+import _ from "lodash";
+import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import axios from "./axios";
+import AdminLayout from "./components/Admin/AdminLayout";
+import AdminDepartments from "./components/Admin/AdminDepartments";
+import AdminEmployees from "./components/Admin/AdminEmployees";
+import AdminLeaveTypes from "./components/Admin/AdminLeaveTypes";
+import AdminLogs from "./components/Admin/AdminLogs";
+import AdminRuleGroups from "./components/Admin/AdminRuleGroups";
+import Home from "./components/Home";
 import LoadingScreen from "./components/LoadingScreen";
+import Login from "./components/Login";
+import NotFound from "./components/NotFound";
 import PrivateRoute from "./components/PrivateRoute";
-import AdminEmployees from "./pages/Admin/AdminEmployees";
-import AdminDepartments from "./pages/Admin/AdminDepartments";
-import AdminLeaveTypes from "./pages/Admin/AdminLeaveTypes";
-import AdminLogs from "./pages/Admin/AdminLogs";
-import AdminRuleGroups from "./pages/Admin/AdminRuleGroups";
-import axios from "./api/axios";
-import Register from "./pages/Register";
+import Topbar from "./components/Topbar";
+import User from "./components/User";
+import { CountriesContext, IdentityContext, UsersContext } from "./Contexts";
 
-export default function App() {
+const getCurrentUser = async () => {
+    try {
+        const user_req = await axios.get("/auth/me");
+        return user_req.data;
+    } catch (error) {
+        console.log(error);
+        debugger;
+        return null;
+    }
+};
+
+const getAllCountries = async () => {
+    try {
+        const countries = await axios.get("/locations");
+        return countries.data;
+    } catch (error) {
+        console.log(error);
+        debugger;
+        return [];
+    }
+};
+
+const App = () => {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [countries, setCountries] = useState([]);
     const [users, setUsers] = useState([]);
-
-    const access_token = getAccessToken();
+    const [countries, setCountries] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchData() {
-            const user = await getCurrentUser();
-            const allCountries = await axios.get(`/locations`);
-            const allUsers = await getAllUsers(true);
-            setUser(user);
-            setCountries(allCountries["data"]);
-            setUsers(allUsers);
+            const token = localStorage.getItem("access_token");
+            if (_.isEmpty(token)) {
+                setLoading(false);
+                return;
+            }
+            const userData = await getCurrentUser();
+            const usersRes = await axios.get("/users");
+            const allCountries = await getAllCountries();
+
+            setUser(userData);
+            setUsers(usersRes["data"]);
+            setCountries(allCountries);
             setLoading(false);
         }
         fetchData();
-    }, []);
+    }, [setLoading]);
 
     // only change value (on render) if user or setUser changes
-    const userMemo = useMemo(() => ({ user, setUser }), [user, setUser]);
+    // const userMemo = useMemo(() => ({ user, setUser }), [user, setUser]);
 
-    // console.log(window.location.href);
-    if (!access_token && !window.location.href.toLowerCase().includes("/register")) {
-        return (
-            <IdentityContext.Provider value={userMemo}>
-                <Login />;
-            </IdentityContext.Provider>
-        );
+    // debugger;
+    if (loading) {
+        return <LoadingScreen />;
     }
-    //  else if (loading !== 0) {
-    //     return <LoadingScreen />;
-    // }
-    else if (!user && !loading && !window.location.href.toLowerCase().includes("/register")) {
-        return (
-            <IdentityContext.Provider value={userMemo}>
-                <Login />;
-            </IdentityContext.Provider>
-        );
-    } else if (window.location.href.toLowerCase().includes("/register/")) {
-        return <Register />;
+
+    if (window.location.pathname !== "/login" && _.isEmpty(user)) {
+        window.location.href = "/login";
+        return;
     }
+
+    const sortedUsers = _.sortBy(users, ["fname", "lname"]);
 
     return (
-        <div style={{ width: "100%", height: "100%", paddingTop: "70px", minHeight: "70rem" }}>
-            <IdentityContext.Provider value={userMemo}>
-                <CountriesContext.Provider value={{ countries }}>
-                    <UsersContext.Provider value={{ users }}>
+        <IdentityContext.Provider value={{ user, setUser }}>
+            <CountriesContext.Provider value={{ countries, setCountries }}>
+                <UsersContext.Provider value={{ users: sortedUsers, setUsers }}>
+                    <div
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            paddingTop: "70px",
+                            minHeight: "70rem",
+                        }}>
                         <Router>
                             <Topbar />
                             <div style={{ height: "100%", minHeight: "100%" }}>
                                 <Routes>
+                                    <Route path="logout" element={<Login logout={true} />} />
                                     <Route path="login" element={<Login />} />
-                                    <Route path="logout" element={<Login forceLogout={true} />} />
                                     <Route path="" element={<Home />} />
-                                    <Route
-                                        path="managment"
-                                        element={
-                                            <PrivateRoute
-                                                isAuthorized={
-                                                    user ? user.employees.length > 0 : true
-                                                }
-                                            />
-                                        }>
-                                        <Route index element={<Managment />} />
-                                    </Route>
 
                                     <Route
                                         path="admin"
                                         element={
-                                            <PrivateRoute
-                                                isAuthorized={user ? user.is_admin : true}
+                                            <AdminLayout
+                                                isAuthorized={user ? user.is_admin : null}
                                             />
                                         }>
-                                        <Route path="/admin/" element={<Admin />}>
-                                            <Route index element={<AdminEmployees />} />
-                                            <Route path="employees" element={<AdminEmployees />} />
-                                            <Route
-                                                path="leave_types"
-                                                element={<AdminLeaveTypes />}
-                                            />
-                                            <Route
-                                                path="departments"
-                                                element={<AdminDepartments />}
-                                            />
-                                            <Route
-                                                path="rule_groups"
-                                                element={<AdminRuleGroups />}
-                                            />
-                                            <Route path="logs" element={<AdminLogs />} />
-                                        </Route>
+                                        <Route index element={<AdminEmployees />} />
+                                        <Route path="employees" element={<AdminEmployees />} />
+                                        <Route path="leave_types" element={<AdminLeaveTypes />} />
+                                        <Route path="departments" element={<AdminDepartments />} />
+                                        <Route path="rule_groups" element={<AdminRuleGroups />} />
+                                        {/* <Route path="logs" element={<AdminLogs />} /> */}
                                     </Route>
+
                                     <Route path="user/:userName" element={<User />} />
                                     <Route path="*" element={<NotFound />} />
                                 </Routes>
                             </div>
                         </Router>
-                    </UsersContext.Provider>
-                </CountriesContext.Provider>
-            </IdentityContext.Provider>
-        </div>
+                    </div>
+                </UsersContext.Provider>
+            </CountriesContext.Provider>
+        </IdentityContext.Provider>
     );
-}
+};
 
 // const Wrapper = styled.div`
 //     display: flex;
@@ -135,3 +135,5 @@ export default function App() {
 //     color: #444;
 //     border: 1px solid #1890ff;
 // `;
+
+export default App;

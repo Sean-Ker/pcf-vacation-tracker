@@ -1,8 +1,8 @@
-import React, { useState, useContext, useEffect } from "react";
-import { Navbar, Nav, Container, Button } from "react-bootstrap";
-import { IdentityContext } from "../Contexts";
+import { Typography } from "antd";
+import { useContext } from "react";
+import { Button, Container, Nav, Navbar } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import styles from "./Topbar.module.css";
+import { IdentityContext } from "../Contexts";
 
 export default function Topbar() {
     const { user } = useContext(IdentityContext);
@@ -17,7 +17,7 @@ export default function Topbar() {
                     style={{ display: "flex", alignItems: "center", padding: 0 }}>
                     <img
                         alt="brand-logo"
-                        className="d-inline-block align-top"
+                        className="align-top d-inline-block"
                         width="50"
                         height="50"
                         src={window.location.origin + "/logo.png"}
@@ -40,11 +40,11 @@ export default function Topbar() {
                                 <Link to="/" className="nav-link">
                                     Calendar
                                 </Link>
-                                {user.employees.length > 0 && (
+                                {/* {user.employees.length > 0 && (
                                     <Link to="/managment" className="nav-link">
                                         Managment
                                     </Link>
-                                )}
+                                )} */}
                                 {user.is_admin && (
                                     <Link to="/admin" className="nav-link">
                                         Admin
@@ -60,8 +60,11 @@ export default function Topbar() {
                                     to={`/user/${user.username}`}
                                     className="p-0 nav-link "
                                     style={{ marginRight: "1.5em" }}>
-                                    Hello, {user.fname}!
+                                    <Typography.Link style={{ color: "white" }}>
+                                        Hello, {user.fname}!
+                                    </Typography.Link>
                                 </Link>
+
                                 <Link to="/logout" className="nav-link">
                                     <Button variant="danger" size="md" className="btn-block">
                                         Logout

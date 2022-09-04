@@ -1,6 +1,5 @@
 import React from "react";
-import { Outlet } from "react-router";
-import { Navigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 
 // export default function PrivateRoute({
 //     element: Element = <Home />,
@@ -16,8 +15,18 @@ import { Navigate } from "react-router-dom";
 // }
 
 const PrivateRoute = ({ isAuthorized }) => {
-    // debugger;
-    return isAuthorized ? <Outlet /> : <Navigate to="/" />;
+    let navigate = useNavigate();
+
+    if (isAuthorized) {
+        return <Outlet />;
+    } else {
+        navigate("/");
+        return (
+            <div>
+                <h1>You are not authorized</h1>
+            </div>
+        );
+    }
 };
 
 export default PrivateRoute;

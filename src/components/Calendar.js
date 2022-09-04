@@ -1,52 +1,27 @@
-import React, { useContext } from "react";
-import Timeline, {
-    TimelineHeaders,
-    SidebarHeader,
-    DateHeader,
-    TimelineMarkers,
-    CustomMarker,
-    TodayMarker,
-    CursorMarker,
-} from "react-calendar-timeline";
+import _ from "lodash";
 import moment from "moment";
+import { useContext, useState } from "react";
+import Timeline, {
+    CursorMarker,
+    DateHeader,
+    SidebarHeader,
+    TimelineHeaders,
+    TimelineMarkers,
+    TodayMarker,
+} from "react-calendar-timeline";
 import { Link } from "react-router-dom";
-import EmployeeName from "./EmployeeName";
 import { IdentityContext, UsersContext } from "../Contexts";
-import { pickTextColorBasedOnBgColor } from "../utils";
+import { renderStatus } from "../utils/renderUtils";
+import textColorFromBg from "../utils/textColorFromBg";
+import titleCase from "../utils/titleCase";
+import EmployeeName from "./EmployeeName";
+import LeaveModal from "./Modals/LeaveModal";
 
-const itemRenderer = ({ item, timelineContext, itemContext, getItemProps, getResizeProps }) => {
-    return (
-        <div
-            {...getItemProps({
-                style: {
-                    background: item.background,
-                    color: item.color,
-                    // borderColor: item.background,
-                    opacity: 0.9,
-                    borderStyle: "solid",
-                    borderWidth: 1,
-                    borderRadius: 4,
-                },
-            })}>
-            <div
-                style={{
-                    textAlign: "center",
-                    height: itemContext.dimensions.height,
-                    overflow: "hidden",
-                    // paddingLeft: 3,
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                }}>
-                {itemContext.title}
-            </div>
-        </div>
-    );
-};
-
-const Calendar = ({ leaveTypes }) => {
-    debugger;
+// Destracture selectedUsers and rename it to users:
+const Calendar = ({ leaves, leaveTypes, selectedUsers }) => {
     const { user } = useContext(IdentityContext);
     const { users } = useContext(UsersContext);
+    const [leave, setLeave] = useState(null);
 
     moment.locale("en", {
         week: {
@@ -54,10 +29,38 @@ const Calendar = ({ leaveTypes }) => {
         },
     });
 
+    const itemRenderer = ({ item, timelineContext, itemContext, getItemProps, getResizeProps }) => {
+        return (
+            <div
+                {...getItemProps({
+                    style: {
+                        background: item.background,
+                        color: item.color,
+                        borderColor: item.color,
+                        opacity: 0.9,
+                        textAlign: "center",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        borderStyle: "solid",
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    },
+                    onMouseDown: () => {
+                        const selectedLeave = leaveRequests.find(leave => leave._id === item._id);
+                        console.log(JSON.stringify(selectedLeave, null, 2));
+                        setLeave(selectedLeave);
+                    },
+                })}>
+                {item.title} ({titleCase(item.status)})
+            </div>
+        );
+    };
+
     const defaultTimeStart = moment().startOf("week").toDate();
     const defaultTimeEnd = moment().startOf("week").add(1, "week").toDate();
 
-    const groups = users
+    const groups = selectedUsers
         .filter(u => u["is_active"])
         .map(u => ({
             id: u["_id"],
@@ -74,60 +77,79 @@ const Calendar = ({ leaveTypes }) => {
         }));
 
     const leaveRequests = [];
-    users.forEach(u => {
-        for (const lr_id in u["leave_requests"]) {
-            const leaveRequest = u["leave_requests"][lr_id];
-            const leaveRequestType = leaveTypes.find(
-                lr => lr["_id"]["$oid"] === leaveRequest["leave_type"]
-            );
-            leaveRequests.push({
-                id: lr_id,
-                group: u["_id"],
-                title: `${leaveRequestType["name"]} - ${leaveRequest["status"]}`,
-                start_time: moment(leaveRequest["start_date"]),
-                end_time: moment(leaveRequest["end_date"]).add(1, "days"), // Adding one day to account for inclusive dates, where library expects exclusive end date.
-                background: leaveRequestType["color"],
-                color: pickTextColorBasedOnBgColor(leaveRequestType["color"]),
-            });
-        }
-    });
+    for (const leave of leaves) {
+        const leave_type_name = leave.leave_type;
+        const days = moment(leave.end_date).diff(moment(leave.start_date), "days") + 1;
 
+        const requester = users.find(u =>
+            Object.keys(_.get(u, "leave_requests", {})).includes(leave._id)
+        );
+        // const manager = users.find(u => u._id === _.get(requester, "manager_id", ""));
+
+        leaveRequests.push({
+            ...leave,
+            _id: leave._id,
+            id: leave._id,
+            key: leave._id,
+            group: requester["_id"],
+            status: leave.status,
+            title: leave.leave_type.name,
+            start_time: moment(leave["start_date"]).toDate(),
+            end_time: moment(leave["end_date"]).add(1, "days").toDate(),
+            background: leave.leave_type.color,
+            color: textColorFromBg(leave.leave_type.color),
+            requester: requester,
+            leave_type: leave_type_name,
+            start_date: leave.start_date,
+            days: days,
+            end_date: leave.end_date,
+        });
+    }
+
+    debugger;
+    console.log(JSON.stringify(leaveRequests, null, 2));
     return (
-        <Timeline
-            groups={groups}
-            items={leaveRequests}
-            showCursorLine
-            itemsSorted
-            fixedHeader="fixed"
-            itemTouchSendsClick={false}
-            sidebarWidth={200}
-            lineHeight={40}
-            itemHeightRatio={0.75}
-            canMove={false}
-            canResize={false}
-            minZoom={24 * 60 * 60 * 1000}
-            maxZoom={365.24 * 86400 * 1000}
-            timeSteps={{
-                second: 0,
-                minute: 0,
-                hour: 0,
-                day: 1,
-                month: 1,
-                year: 1,
-            }}
-            itemRenderer={itemRenderer}
-            defaultTimeStart={defaultTimeStart}
-            defaultTimeEnd={defaultTimeEnd}>
-            <TimelineHeaders className="headerSticky">
-                <SidebarHeader />
-                <DateHeader unit="primaryHeader" />
-                <DateHeader />
-                <TimelineMarkers>
-                    <TodayMarker />
-                    <CursorMarker />
-                </TimelineMarkers>
-            </TimelineHeaders>
-        </Timeline>
+        <>
+            <Timeline
+                groups={groups}
+                items={leaveRequests}
+                showCursorLine
+                itemsSorted
+                fixedHeader="fixed"
+                sidebarWidth={200}
+                lineHeight={35}
+                itemHeightRatio={0.75}
+                canMove={false}
+                canResize={false}
+                canSelect={false}
+                minZoom={1000 * 60 * 1440 * 7 * 1.5}
+                maxZoom={1000 * 60 * 1440 * 31 * 1.5}
+                timeSteps={{
+                    second: 0,
+                    minute: 0,
+                    hour: 0,
+                    day: 1,
+                    month: 1,
+                    year: 1,
+                }}
+                itemRenderer={itemRenderer}
+                defaultTimeStart={defaultTimeStart}
+                defaultTimeEnd={defaultTimeEnd}
+                itemTouchSendsClick={false}>
+                <TimelineHeaders className="headerSticky">
+                    <SidebarHeader />
+                    <DateHeader unit="primaryHeader" />
+                    <DateHeader />
+                    <TimelineMarkers>
+                        <TodayMarker />
+                        <CursorMarker />
+                    </TimelineMarkers>
+                </TimelineHeaders>
+            </Timeline>
+            {!_.isEmpty(leave) && (
+                <LeaveModal leave={leave} setLeave={setLeave} leaveTypes={leaveTypes} />
+            )}
+        </>
     );
 };
 

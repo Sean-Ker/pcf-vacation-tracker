@@ -1,12 +1,15 @@
-import React, { useEffect } from "react";
+import _ from "lodash";
+import React, { useContext, useEffect } from "react";
 import { Modal, Form, Select, Button, Typography, Input, Popconfirm } from "antd";
-import axios from "../../api/axios";
+import axios from "../../axios";
 import EmployeeName from "../EmployeeName";
+import { UsersContext } from "../../Contexts";
 
 const { Option } = Select;
 
-const EditRuleGroupModal = ({ modalVisible, setModalVisible, users, ruleGroup }) => {
+const EditRuleGroupModal = ({ ruleGroup, setRuleGroup }) => {
     const [form] = Form.useForm();
+    const { users } = useContext(UsersContext);
 
     useEffect(() => {
         form.setFieldsValue({ name: ruleGroup["name"], employees: ruleGroup["employee_ids"] });
@@ -14,8 +17,8 @@ const EditRuleGroupModal = ({ modalVisible, setModalVisible, users, ruleGroup })
 
     return (
         <Modal
-            width={600}
-            visible={modalVisible}
+            width={800}
+            visible={!_.isEmpty(ruleGroup)}
             title={`Edit ${ruleGroup["name"]}`}
             okText="Save"
             getContainer={false}
@@ -26,14 +29,14 @@ const EditRuleGroupModal = ({ modalVisible, setModalVisible, users, ruleGroup })
                             employee_ids: values["employees"],
                         });
                         form.resetFields();
-                        setModalVisible(false);
+                        setRuleGroup(null);
                     })
                     .catch(info => {
                         console.log("Validate Failed:", info);
                     });
             }}
             onCancel={() => {
-                setModalVisible(false);
+                setRuleGroup(null);
             }}>
             <Typography.Title level={2}>Rule Group Info</Typography.Title>
             <Form form={form} name="modalForm" autoComplete="off">
@@ -78,7 +81,7 @@ const EditRuleGroupModal = ({ modalVisible, setModalVisible, users, ruleGroup })
                 title="Are you sure to delete this rule group?"
                 onConfirm={async () => {
                     await axios.patch(`/rule_groups/${ruleGroup["_id"]["$oid"]}`);
-                    setModalVisible(false);
+                    setRuleGroup(null);
                 }}
                 okText="Yes"
                 cancelText="No">

@@ -67,11 +67,15 @@ jwt = JWTManager(app)
 def after_request(response):
     # print("After request is running!")
     response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Methods", "DELETE, POST, PUT, GET, OPTIONS, PATCH")
+    response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS,PATCH,HEAD")
     response.headers.add(
         "Access-Control-Allow-Headers",
-        "Access-Control-Allow-Origin, Content-Type, Access-Control-Allow-Headers, Authorization, authorization, X-Requested-With, append,delete,entries,foreach,get,has,keys,set,values",
+        "Accept,Access-Control-Allow-Credentials,Access-Control-Allow-Credentials,Access-Control-Allow-Headers,Access-Control-Allow-Headers,Access-Control-Allow-Methods,Access-Control-Allow-Methods,Access-Control-Allow-Origin,Access-Control-Allow-Origin,Access-Control-Expose-Headers,Access-Control-Max-Age,Access-Control-Request-Headers,Access-Control-Request-Method,Append,Authorization,contenttype,Content-Type,Delete,Dntries,Foreach,Gas,Get,Keys,Origin,Set,ValuesX-Requested-With,X-CSRF-Token,X-Requested-With,X-XSRF-Token",
     )
+    response.headers.add("Access-Control-Allow-Credentials", "true")
+    response.headers.add("Access-Control-Expose-Headers", "Link")
+    response.headers.add("Access-Control-Max-Age", "3600")
+    response.headers.add("Access-Control-Allow-Headers", "")
     return response
 
 

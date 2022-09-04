@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Select, Spin, Typography, Form } from "antd";
 import EmployeeName from "./EmployeeName";
-import axios from "../api/axios";
+import axios from "../axios";
+import LoadingScreen from "./LoadingScreen";
 
 const { Option } = Select;
 
@@ -20,11 +21,7 @@ const CeoSelect = ({ ceoId, setCeoId, users }) => {
     }, [setCeoId]);
 
     if (loading) {
-        return (
-            <div style={{ textAlign: "center" }}>
-                <Spin size="large" />
-            </div>
-        );
+        return <LoadingScreen />;
     }
 
     return (

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Input, Form, Checkbox, InputNumber, Typography } from "antd";
 import { TwitterPicker } from "react-color";
-import axios from "../../api/axios";
+import axios from "../../axios";
 
 const CreateLeaveTypeModal = ({ modalVisible, setModalVisible }) => {
     const [form] = Form.useForm();

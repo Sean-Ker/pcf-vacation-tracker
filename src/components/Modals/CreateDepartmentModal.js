@@ -1,6 +1,11 @@
-import React from "react";
-import { Modal, Input, Form } from "antd";
-import { createNewDepartment } from "../../api/api";
+import { Form, Input, Modal } from "antd";
+import axios from "../../axios";
+
+const createNewDepartment = async name => {
+    const new_department = await axios.post("/departments", { name: name });
+    // console.log(new_department);
+    return new_department;
+};
 
 const CreateDepartmentModal = ({ modalVisible, setModalVisible }) => {
     const [form] = Form.useForm();

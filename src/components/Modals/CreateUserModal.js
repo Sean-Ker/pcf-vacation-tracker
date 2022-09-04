@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Modal, Form, message, Select, Checkbox, Alert, Input } from "antd";
 import EmployeeName from "../EmployeeName";
-import axios from "../../api/axios";
+import axios from "../../axios";
+import { UsersContext } from "../../Contexts";
 const _ = require("lodash");
 
 const CreateUserModal = props => {
-    const { modalVisible, setModalVisible, users, departments, leaveTypes } = props;
+    const { modalVisible, setModalVisible, departments, leaveTypes } = props;
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState({ visible: false, message: "" });
+    const { users, setUsers } = useContext(UsersContext);
 
     const [form] = Form.useForm();
     const { Option } = Select;
@@ -47,23 +49,22 @@ const CreateUserModal = props => {
                             manager_id: values["manager"],
                             is_admin: values["isAdmin"],
                         };
-                        axios
-                            .post("/users", axiosData)
-                            .then(() => {
-                                debugger;
-                                message.success(
-                                    `Successfully created user ${axiosData["fname"]} ${axiosData["lname"]}`
-                                );
-                                form.resetFields();
-                                setModalVisible(false);
-                                setError({ visible: false, message: "" });
-                            })
-                            .catch(res => {
-                                setError({ visible: true, message: res["response"]["data"] });
-                            })
-                            .finally(() => {
-                                setLoading(false);
-                            });
+
+                        try {
+                            await axios.post("/users", axiosData);
+                            message.success(
+                                `Successfully created user ${axiosData["fname"]} ${axiosData["lname"]}`
+                            );
+                            form.resetFields();
+                            const allUsersRes = await axios.get("users");
+                            setUsers(allUsersRes["data"]);
+                            setModalVisible(false);
+                            setError({ visible: false, message: "" });
+                            setLoading(false);
+                        } catch (res) {
+                            setError({ visible: true, message: res["response"]["data"] });
+                            setLoading(false);
+                        }
                     })
                     .catch(info => {
                         console.log("Validate Failed:", info);

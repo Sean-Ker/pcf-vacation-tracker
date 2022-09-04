@@ -59,8 +59,9 @@ button {
 
 :is(h1, h2, h3, h4, h5, h6) {
     font-family: Poppins !important;
-    line-height: 1.2;
-    color: var(--clr-fg-alt);
+    line-height: 1.2 !important;
+    color: var(--clr-fg-alt) !important;
+    margin: 1em 0 0.5rem 0 !important;
 }
 
 .center {
@@ -85,4 +86,17 @@ body::-webkit-scrollbar-thumb {
     background-color: #11a7f5; /* color of the scroll thumb */
     border-radius: 20px; /* roundness of the scroll thumb */
     border: 3px solid lightgray; /* creates padding around scroll thumb */
+}
+
+/* Form Labels */
+label {
+    font-weight: 700;
+}
+
+th.ant-table-cell {
+    font-weight: 700 !important;
+}
+
+.ant-table-content > table {
+    border-top: 4px solid #f4960b !important;
 }

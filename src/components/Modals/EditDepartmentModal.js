@@ -12,9 +12,10 @@ import {
     Popconfirm,
 } from "antd";
 
-import axios from "../../api/axios";
+import axios from "../../axios";
 import EmployeeName from "../EmployeeName";
 import { Link } from "react-router-dom";
+import LoadingScreen from "../LoadingScreen";
 
 const CreateDepartmentModal = ({ department, setDepartment, modalVisible, setModalVisible }) => {
     const [form] = Form.useForm();
@@ -39,9 +40,7 @@ const CreateDepartmentModal = ({ department, setDepartment, modalVisible, setMod
     if (loading) {
         return (
             <Modal width={800} visible={modalVisible} confirmLoading={loading} okText="Save">
-                <div style={{ textAlign: "center", padding: "130px 50px" }}>
-                    <Spin size="large" />
-                </div>
+                <LoadingScreen />
             </Modal>
         );
     }

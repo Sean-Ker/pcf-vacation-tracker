@@ -26,6 +26,7 @@ class LeaveTypes(Resource):
     def get(self):
         company_id = get_jwt()["company_id"]
         all_leave_types = list(db.leave_types.find({"company_id": company_id}))
+        # print(all_leave_types)
         return Response(json_util.dumps(all_leave_types))
 
     @jwt_required()
@@ -54,7 +55,7 @@ class LeaveType(Resource):
     def get(self, id):
         company_id = get_jwt()["company_id"]
         leave_type = db.leave_types.find_one({"_id": ObjectId(id), "company_id": company_id})
-        print(leave_type)
+        # print(leave_type)
         return Response(json_util.dumps(leave_type))
 
     @jwt_required()

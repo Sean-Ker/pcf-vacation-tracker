@@ -24,7 +24,7 @@ api = Namespace("locations")
 class Locations(Resource):
     def get(self):
         all_locations = list(db.countries.find({}))
-        return all_locations
+        return Response(json_util.dumps(all_locations), 200)
 
 
 @api.route("/<string:code>")

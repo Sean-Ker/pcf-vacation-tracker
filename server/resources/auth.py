@@ -25,6 +25,7 @@ api = Namespace("auth", description="Authentication Ednpoints")
 @api.route("/login")
 class Login(Resource):
     def post(self):
+        # Get email and password from request
         email = request.json.get("email", "")
         password = request.json.get("password", "")
         user = db.users.find_one({"email": email.lower()})
@@ -39,14 +40,16 @@ class Login(Resource):
                 access = create_access_token(identity=id, additional_claims=additional_claims)
 
                 if not user["is_active"]:
-                    return {"error": "User is deactivated"}, 401
+                    return Response(
+                        json_util.dumps({"Error": "User is not active."}), status=400, mimetype="application/json"
+                    )
 
                 return Response(
                     json_util.dumps({"refresh_token": refresh, "access_token": access, "company_id": company_id})
                 )
             else:
-                return {"error": "Wrong Credentials"}, 401
-        return {"error": "Wrong Credentials"}, 401
+                return Response("Invalid password", status=401, mimetype="application/json")
+        return Response("Invalid email", status=401, mimetype="application/json")
 
 
 from utils import get_user_by_id
@@ -56,11 +59,11 @@ from utils import get_user_by_id
 class Me(Resource):
     @jwt_required()
     def get(self):
-        user_id = get_jwt_identity()
         # user = db.users.find_one({"_id": user_id}, {"pwd": 0})
+        user_id = get_jwt_identity()
         user = get_user_by_id(user_id)
         if not user:
-            return jsonify({"Error": "Shouldn't happen. Please report."}), 400
+            return Response("Error: Shouldn't happen. Please report.", status=500)
         return Response(json_util.dumps(user), 200)
 
 

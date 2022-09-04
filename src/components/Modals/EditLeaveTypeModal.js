@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Input, Form, Checkbox, InputNumber, Typography, Popover, Button } from "antd";
 import { TwitterPicker } from "react-color";
-import axios from "../../api/axios";
+import axios from "../../axios";
 
 const EditLeaveTypeModal = ({ leaveType, modalVisible, setModalVisible }) => {
     const [form] = Form.useForm();

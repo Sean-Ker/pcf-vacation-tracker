@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Tree, Input } from "antd";
 import EmployeeName from "./EmployeeName";
 import { Link } from "react-router-dom";
+import _ from "lodash";
 
 const { Search } = Input;
 
@@ -50,7 +51,7 @@ const CompanyHierarchy = ({ users }) => {
     const [expandedKeys, setExpandedKeys] = useState();
     const [autoExpandParent, setAutoExpandParent] = useState(true);
 
-    const root_nodes = users.filter(u => u["manager_id"] === null);
+    const root_nodes = users.filter(u => !_.get(u, "manager_id", null));
     const treeData = root_nodes.map(node => generateTreeData(users, node, searchValue));
 
     const dataList = [];
@@ -117,7 +118,6 @@ const CompanyHierarchy = ({ users }) => {
                     onChange={onSearchChange}
                     value={searchValue}
                 />
-                <br />
                 <Tree
                     treeData={treeData}
                     onExpand={onExpand}

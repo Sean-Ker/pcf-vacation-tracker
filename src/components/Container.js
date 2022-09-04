@@ -23,8 +23,6 @@ export const ContainerStyles = styled.div`
     }
 `;
 
-function Container(props) {
+export default function Container(props) {
     return <ContainerStyles {...props} />;
 }
-
-export default Container;

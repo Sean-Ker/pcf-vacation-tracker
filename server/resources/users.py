@@ -48,7 +48,7 @@ def check_hierarchy_stracture(new_user):
     company_id = new_user["company_id"]
     id = new_user["_id"]
 
-    print(db.list_collection_names())
+    # print(db.list_collection_names())
     if "users_tmp" in db.list_collection_names():
         return Response("Error: The app currently proccesses other changes. Please try again in a second.", 400)
 
@@ -93,7 +93,15 @@ class Users(Resource):
     def get(self):
         """Get all users"""
         company_id = get_jwt()["company_id"]
-        all_users = db.users.find({"company_id": company_id}, {"pwd": 0})
+        all_users = list(db.users.find({"company_id": company_id}, {"pwd": 0}))
+
+        for user in all_users:
+            user["department"] = db.departments.find_one(
+                {"_id": ObjectId(user["department_id"]), "company_id": company_id}
+            )
+            user["manager"] = db.users.find_one({"_id": user["manager_id"], "company_id": company_id})
+            # user["employees"] = list(db.users.find({"manager_id": user.get("_id", None)}))
+
         return Response(json_util.dumps(all_users), 200)
 
     @jwt_required()
@@ -163,22 +171,6 @@ class Users(Resource):
         return Response(f'Successfully created an account for {data["fname"]} {data["lname"]}', 200)
 
 
-@api.route("/all")
-class AllUsers(Resource):
-    @jwt_required()
-    def get(self):
-        """Get all users with full information"""
-        company_id = get_jwt()["company_id"]
-        all_employees = list(db.users.find({"company_id": company_id}, {"pwd": 0}))
-        for user in all_employees:
-            user["department"] = db.departments.find_one(
-                {"_id": ObjectId(user["department_id"]), "company_id": company_id}
-            )
-            user["manager"] = db.users.find_one({"_id": user["manager_id"], "company_id": company_id})
-            # user["employees"] = list(db.users.find({"manager_id": user.get("_id", None)}))
-        return Response(json_util.dumps(all_employees), 200)
-
-
 @api.route("/<string:id>")
 class UserById(Resource):
     @jwt_required()
@@ -233,6 +225,19 @@ class UserById(Resource):
         db.users.update_one({"company_id": company_id, "_id": id}, {"$set": {**data}})
 
         return Response(f"Successfully edited employee with id {id}.")
+
+    @jwt_required()
+    def patch(self, id):
+        # Delete user using its id
+        company_id = get_jwt()["company_id"]
+        user = db.users.find_one({"company_id": company_id, "_id": id}, {"pwd": 0})
+        if not user:
+            return Response(f"Error: Invalid id, {id}", 400)
+        db.users.delete_one({"company_id": company_id, "_id": id})
+        db.users.update_many({"company_id": company_id, "manager_id": id}, {"$set": {"manager_id": None}})
+        db.users.update_many({"company_id": company_id, "employees": id}, {"$pull": {"employees": id}})
+        db.rule_groups.update_many({"company_id": company_id, "employee_ids": id}, {"$pull": {"employee_ids": id}})
+        return Response(f"Successfully deleted employee {user['fname']} {user['lname']}")
 
 
 @api.route("/username/<string:username>")
@@ -294,3 +299,19 @@ class UserByUUID(Resource):
         )
 
         return Response("Successfully registered new user", 200)
+
+
+# @api.route("/all")
+# class AllUsers(Resource):
+#     @jwt_required()
+#     def get(self):
+#         """Get all users with full information"""
+#         company_id = get_jwt()["company_id"]
+#         all_employees = list(db.users.find({"company_id": company_id}, {"pwd": 0}))
+#         for user in all_employees:
+#             user["department"] = db.departments.find_one(
+#                 {"_id": ObjectId(user["department_id"]), "company_id": company_id}
+#             )
+#             user["manager"] = db.users.find_one({"_id": user["manager_id"], "company_id": company_id})
+#             # user["employees"] = list(db.users.find({"manager_id": user.get("_id", None)}))
+#         return Response(json_util.dumps(all_employees), 200)

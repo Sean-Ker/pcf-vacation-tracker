@@ -13,8 +13,8 @@ import {
     notification,
     Tooltip,
 } from "antd";
-import axios from "../../api/axios";
-import { IdentityContext } from "../../Contexts";
+import axios from "../../axios";
+import { IdentityContext, UsersContext } from "../../Contexts";
 
 import EmployeeName from "../EmployeeName";
 import { Link } from "react-router-dom";
@@ -25,17 +25,12 @@ const calcDaysReq = dates => {
     return dates[0] ? moment.duration(dates[1].diff(dates[0])).asDays() + 1 : 0;
 };
 
-const NewRequestModal = ({
-    modalVisible,
-    setModalVisible,
-    users,
-    allLeaveTypes,
-    allRuleGroups,
-}) => {
+const NewRequestModal = ({ modalVisible, setModalVisible, allLeaveTypes, allRuleGroups }) => {
     const [leaveType, setLeaveType] = useState(null);
     const [dateRange, setDateRange] = useState([null, null]);
     const [overlapping, setOverlapping] = useState([]);
     const { user } = useContext(IdentityContext);
+    const { users, setUsers } = useContext(UsersContext);
 
     const [form] = Form.useForm();
 
@@ -82,15 +77,15 @@ const NewRequestModal = ({
                             leave_type: values.leaveType,
                             reason: values.reason,
                         };
-                        axios
-                            .post("/leave_requests", data)
-                            .then(() => {
-                                form.resetFields();
-                                setModalVisible(false);
-                            })
-                            .catch(res => {
-                                message.error(res["response"]["data"], 5);
-                            });
+                        try {
+                            await axios.post("/leave_requests", data);
+                            form.resetFields();
+                            setModalVisible(false);
+                            const allUsersRes = await axios.get("users");
+                            setUsers(allUsersRes["data"]);
+                        } catch (res) {
+                            message.error(res["response"]["data"], 5);
+                        }
                     })
                     .catch(info => {
                         console.log("Validate Failed:", info);

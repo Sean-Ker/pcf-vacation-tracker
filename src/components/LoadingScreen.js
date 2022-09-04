@@ -4,25 +4,17 @@ import Loading from "./Loading";
 
 const LoadingScreen = () => {
     return (
-        <div style={{ textAlign: "center", padding: "130px 50px" }}>
-            <Spin size="large" />
+        <div
+            style={{
+                textAlign: "center",
+                width: "100%",
+                height: "100%",
+                minHeight: "400px",
+                position: "relative",
+            }}>
+            <Spin size="large" style={{ position: "absolute", top: "50%", left: "50%" }} />
         </div>
     );
 };
 
 export default LoadingScreen;
-
-// export default function LoadingScreen() {
-//     return (
-//         <div
-//             style={{
-//                 position: "absolute",
-//                 display: "block",
-//                 left: "50%",
-//                 top: "50%",
-//             }}>
-//             <Loading />
-//             {/* <div>Loading...</div> */}
-//         </div>
-//     );
-// }

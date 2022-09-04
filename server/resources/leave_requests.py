@@ -1,3 +1,20 @@
+"""
+Supporting functions:
+1. leave_requests_from_user - validates the leave requests of a user and returns a list of leave requests objects
+2. get_overlapping_users - gets all other users that are overlapping with the specified leave dates
+
+Endpoints:
+1. /leave_requests - GET - get all leave requests that the current user has access to
+2. /leave_requests - POST - create a leave request
+3. /leave_requests - PATCH - Deletes all leave requests. User must be an admin.
+4. /leave_requests/<leave_request_id> - GET - get a leave request by its id
+5. /leave_requests/<leave_request_id> - PUT - Answer a leave request. User must be the employees manager or an admin.
+6. /leave_requests/<leave_request_id> - DELETE - Delete a leave request. User must be an admin.
+7. /overlapping - GET - get all overlapping leave requests for the current user
+8. /overlapping/<string:id> - GET - get all overlapping leave requests for the user with the specified id
+9. /cancel/<string:id> - PUT - cancel a leave request. User must be that employee, its manager or an admin.
+"""
+
 import json
 from datetime import datetime, timedelta, timezone
 from pprint import pprint
@@ -30,14 +47,53 @@ class LeaveStatus:
     ALL_OPTIONS = ["OPEN", "APPROVED", "REJECTED", "CANCELLED"]
 
 
+def leave_requests_from_user(user, user_identity, leave_types):
+    leave_requests = []
+    for lr_id, lr in user["leave_requests"].items():
+        required_fields = ["start_date", "end_date", "leave_type", "request_date", "status"]
+        for req_key in required_fields:
+            if req_key not in lr:
+                return Response(f"Error: The leave request with id {lr_id} is missing the {req_key} field.", 400)
+
+        if lr["status"] in [LeaveStatus.OPEN, LeaveStatus.CANCELLED, LeaveStatus.REJECTED]:
+            if not user_identity["is_admin"] and user["_id"] not in (
+                user_identity.get("employees", []) + [user_identity["_id"]]
+            ):
+                continue
+
+        lt = [lt for lt in leave_types if lt["_id"] == ObjectId(lr["leave_type"])]
+        if len(lt) != 1:
+            return Response(
+                f"Error: The leave request with id {lr_id} has an invalid leave type: {lr['leave_type']}.", status=400
+            )
+        lr["_id"] = str(lr_id)
+        lr["leave_type"] = lt[0]
+
+        lr["start_date"] = datetime.fromisoformat(lr["start_date"])
+        lr["end_date"] = datetime.fromisoformat(lr["end_date"])
+        leave_duration = (lr["end_date"] - lr["start_date"]).days
+        if leave_duration < 0:
+            return Response(f"Error: The leave request with id {lr_id} has an invalid start and end date.", status=400)
+
+        # Check lr based on status?? What need to check?
+        # Check if leave request is answered by anyone and if so that the other fields are presented
+        # Check if reason is required and if it is provided
+
+        leave_requests.append(lr)
+
+    return leave_requests
+
+
 def get_overlapping_users(leaving_user, start_date: str, end_date: str):
     company_id = get_jwt()["company_id"]
     rule_groups_with_user = list(db.rule_groups.find({"company_id": company_id, "employee_ids": leaving_user["_id"]}))
     rule_groups_users_ids = [
         [id for id in rg["employee_ids"] if id != leaving_user["_id"]] for rg in rule_groups_with_user
     ]
+    # flatten the list of lists
     rule_groups_users_ids = [item for sublist in rule_groups_users_ids for item in sublist]
 
+    # get all users that are in the same rule group as the leaving user
     users = list(db.users.find({"company_id": company_id, "_id": {"$in": rule_groups_users_ids}}))
     overlapping = []
     for rg in rule_groups_with_user:
@@ -68,17 +124,41 @@ def get_overlapping_users(leaving_user, start_date: str, end_date: str):
 class LeaveRequests(Resource):
     @jwt_required()
     def get(self):
-        """Get all leave requests data"""
+        """Get all leave requests data based on your identity.
+        All users (Admins, managers and regular employees) can get their own leave requests.
+
+        APPROVED leave requests are public records, and so they're viewable to everyone else in the company, no matter their identity.
+
+        Admins can get all leave requests.
+        Manager can get all leave requests for his/her employees.
+        Regular Employees can only get all leave requests for themselves.
+        """
         company_id = get_jwt()["company_id"]
-        all_users = list(
+        users_with_leave_requests = list(
             db.users.find({"company_id": company_id, "leave_requests": {"$exists": True}}, {"leave_requests": 1})
         )
-        all_leaves = []
-        for u in all_users:
-            data = u["leave_requests"].copy()
-            data["user_id"] = u["_id"]
-            all_leaves.append(data)
-        return all_leaves
+
+        # Check the identity of the current user
+        user_id = get_jwt_identity()
+        user = db.users.find_one({"company_id": company_id, "_id": user_id})
+        if not user:
+            return Response(f"Error: The user with id {user_id} does not exist. Please report.", 400)
+
+        leave_requests = []
+        leave_types = list(db.leave_types.find({"company_id": company_id}))
+        for u in users_with_leave_requests:
+            leaves_res = leave_requests_from_user(u, user, leave_types)
+            if isinstance(leaves_res, Response):
+                return leaves_res
+
+            # print(leaves_res)
+            for lr in leaves_res:
+                lr["start_date"] = lr["start_date"].strftime("%Y-%m-%d")
+                lr["end_date"] = lr["end_date"].strftime("%Y-%m-%d")
+                leave_requests.append(lr)
+
+        # User is a regular employee.
+        return Response(json_util.dumps(leave_requests), 200, mimetype="application/json")
 
     @jwt_required()
     def post(self):
@@ -87,9 +167,12 @@ class LeaveRequests(Resource):
         user_id = get_jwt_identity()
 
         data = request.json
-        leave_type = db.leave_types.find_one({"company_id": company_id, "_id": ObjectId(data["leave_type"])})
-        if not leave_type:
-            return Response("Error: The specified leave type is does not exist.", 400)
+        leave_types = list(db.leave_types.find({"company_id": company_id}))
+        leave_type = [lt for lt in leave_types if lt["_id"] == ObjectId(data["leave_type"])]
+        if len(leave_type) != 1:
+            return Response(f"Error: The leave type with id {data['leave_type']} does not exist or duplicated.", 400)
+        else:
+            leave_type = leave_type[0]
 
         if set(data.keys()) != {"start_date", "end_date", "leave_type", "reason"}:
             return Response("Error: Invalid paramaters", 400)
@@ -110,13 +193,12 @@ class LeaveRequests(Resource):
         user = db.users.find_one({"company_id": company_id, "_id": user_id})
         if not user:
             return Response("Error", 400)
-        for lr in user["leave_requests"]:
-            leave_request = user["leave_requests"][lr]
-            if leave_request["status"] not in ["OPEN", "APPROVED"]:
+
+        leave_requests = leave_requests_from_user(user, user, leave_types)
+        for lr in leave_requests:
+            if lr["status"] not in ["OPEN", "APPROVED"]:
                 continue
-            other_start_date = datetime.fromisoformat(leave_request["start_date"])
-            other_end_date = datetime.fromisoformat(leave_request["end_date"])
-            if other_end_date >= start_date and other_start_date <= end_date:
+            if lr["end_date"] >= start_date and lr["start_date"] <= end_date:
                 return Response(
                     "Error: You can't overlap new leave requests with previous open or approved requests.", 400
                 )
@@ -140,7 +222,7 @@ class LeaveRequests(Resource):
 
     @jwt_required()
     def patch(self):
-        """Deletes all vacation requests, logs but doesn't return employee's days back"""
+        """Deletes all vacation requests and logs but doesn't return employee's days back"""
         user_id = get_jwt_identity()
         company_id = get_jwt()["company_id"]
         user = db.users.find_one({"company_id": company_id, "_id": user_id})
@@ -155,7 +237,7 @@ class LeaveRequests(Resource):
 class LeaveRequest(Resource):
     @jwt_required()
     def get(self, id):
-        """Returns the user with the specified vacation id"""
+        """Returns the user with the specified leave request id"""
         company_id = get_jwt()["company_id"]
         leaving_user = db.users.find_one({"company_id": company_id, f"leave_requests.{id}": {"$exists": True}})
         if not leaving_user:
@@ -215,9 +297,9 @@ class LeaveRequest(Resource):
                 400,
             )
         if not changer:
-            return Response("Error: You don't have permissions to do that. Please report.", 400)
+            return Response("Error: You don't have a permission to do that. Please report.", 400)
         if not (changer["is_admin"] or leaving_user["manager_id"] == changer_id):
-            return Response("Error: You don't have permissions to that. Please report.", 400)
+            return Response("Error: You don't have a permission to do that. Please report.", 400)
         if not bool(leave_type["needs_approval"]):
             return Response(
                 "Error: This leave type does not require an approval. If you see this message, please report it to your admin.",
@@ -265,21 +347,6 @@ class LeaveRequest(Resource):
         return Response(f"Successfully {'approved' if is_approving else 'rejected'} leave request with id {id}.")
 
 
-@api.route("/overlapping/<string:id>")
-class LeaveRequestOverlap(Resource):
-    @jwt_required()
-    def get(self, id):
-        """Return ids of users with overlapping dates"""
-        company_id = get_jwt()["company_id"]
-        leaving_user = db.users.find_one({"company_id": company_id, f"leave_requests.{id}": {"$exists": True}})
-        if not leaving_user:
-            return Response(f"Error: Leave request with ID {id} does not exist. Please report.", 400)
-
-        leave_request = leaving_user["leave_requests"][id]
-        overlapping_ids = get_overlapping_users(leaving_user, leave_request["start_date"], leave_request["end_date"])
-        return Response(json_util.dumps(overlapping_ids), 200)
-
-
 @api.route("/overlapping")
 class NewRequestOverlap(Resource):
     @jwt_required()
@@ -296,6 +363,23 @@ class NewRequestOverlap(Resource):
             return Response(f"Error: Leave request with ID {id} does not exist. Please report.", 400)
 
         overlapping_ids = get_overlapping_users(leaving_user, data["start_date"], data["end_date"])
+        if type(overlapping_ids) == Response:
+            return overlapping_ids
+        return Response(json_util.dumps(overlapping_ids), 200)
+
+
+@api.route("/overlapping/<string:id>")
+class LeaveRequestOverlap(Resource):
+    @jwt_required()
+    def get(self, id):
+        """Return ids of users with overlapping dates"""
+        company_id = get_jwt()["company_id"]
+        leaving_user = db.users.find_one({"company_id": company_id, f"leave_requests.{id}": {"$exists": True}})
+        if not leaving_user:
+            return Response(f"Error: Leave request with ID {id} does not exist. Please report.", 400)
+
+        leave_request = leaving_user["leave_requests"][id]
+        overlapping_ids = get_overlapping_users(leaving_user, leave_request["start_date"], leave_request["end_date"])
         if type(overlapping_ids) == Response:
             return overlapping_ids
         return Response(json_util.dumps(overlapping_ids), 200)
